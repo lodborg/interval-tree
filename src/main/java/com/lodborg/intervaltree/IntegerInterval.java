@@ -13,13 +13,8 @@ public class IntegerInterval extends Interval<Integer> {
 	}
 
 	@Override
-	protected IntegerInterval create(Integer start, boolean isStartInclusive, Integer end, boolean isEndInclusive){
-		IntegerInterval interval = new IntegerInterval();
-		interval.start = start;
-		interval.isStartInclusive = isStartInclusive;
-		interval.end = end;
-		interval.isEndInclusive = isEndInclusive;
-		return interval;
+	protected IntegerInterval create(){
+		return new IntegerInterval();
 	}
 
 	@Override

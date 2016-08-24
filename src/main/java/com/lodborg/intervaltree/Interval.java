@@ -68,7 +68,17 @@ public abstract class Interval<T extends Comparable<? super T>> {
 		}
 	}
 
-	protected abstract Interval<T> create(T start, boolean isStartInclusive, T end, boolean isEndInclusive);
+	abstract boolean isEmpty();
+	protected abstract Interval<T> create();
+
+	protected Interval<T> create(T start, boolean isStartInclusive, T end, boolean isEndInclusive){
+		Interval<T> interval = create();
+		interval.start = start;
+		interval.isStartInclusive = isStartInclusive;
+		interval.end = end;
+		interval.isEndInclusive = isEndInclusive;
+		return interval;
+	}
 
 	public T getStart(){
 		return start;
@@ -89,8 +99,6 @@ public abstract class Interval<T extends Comparable<? super T>> {
 		}
 		return start.compareTo(end) == 0;
 	}
-
-	abstract boolean isEmpty();
 
 	public boolean contains(T query){
 		if (isEmpty()) {
