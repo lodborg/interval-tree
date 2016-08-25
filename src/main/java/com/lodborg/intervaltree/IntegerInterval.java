@@ -18,7 +18,16 @@ public class IntegerInterval extends Interval<Integer> {
 	}
 
 	@Override
-	boolean isEmpty() {
+	public Integer getMidpoint() {
+		if (isEmpty())
+			return null;
+		int from = start == null ? Integer.MIN_VALUE : start;
+		int to = end ==  null ? Integer.MAX_VALUE : end;
+		return (int)(from + (to-(long)from)/2);
+	}
+
+	@Override
+	public boolean isEmpty() {
 		if (start == null || end == null)
 			return false;
 		if (start > end)

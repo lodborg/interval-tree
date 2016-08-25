@@ -68,8 +68,9 @@ public abstract class Interval<T extends Comparable<? super T>> {
 		}
 	}
 
-	abstract boolean isEmpty();
+	public abstract boolean isEmpty();
 	protected abstract Interval<T> create();
+	public abstract T getMidpoint();
 
 	protected Interval<T> create(T start, boolean isStartInclusive, T end, boolean isEndInclusive){
 		Interval<T> interval = create();
@@ -188,5 +189,124 @@ public abstract class Interval<T extends Comparable<? super T>> {
 			return false;
 		Interval<T> intersection = getIntersection(query);
 		return intersection != null && !intersection.isEmpty();
+	}
+
+	public boolean isRightOf(T point, boolean inclusive){
+		if (point == null || start == null)
+			return false;
+		int compare = point.compareTo(start);
+		if (compare != 0)
+			return compare < 0;
+		return !isStartInclusive() || !inclusive;
+	}
+
+	public boolean isRightOf(T point){
+		return isRightOf(point, true);
+	}
+
+	public boolean isRightOf(Interval<T> other){
+		return isRightOf(other.end, other.isEndInclusive());
+	}
+
+	public boolean isLeftOf(T point, boolean inclusive){
+		if (point == null || end == null)
+			return false;
+		int compare = point.compareTo(end);
+		if (compare != 0)
+			return compare > 0;
+		return !isEndInclusive() || !inclusive;
+	}
+
+	public boolean isLeftOf(T point){
+		return isLeftOf(point, true);
+	}
+
+	public boolean isLeftOf(Interval<T> other){
+		return isLeftOf(other.start, other.isStartInclusive());
+	}
+
+	public Builder getBuilder(){
+		return new Builder(this);
+	}
+
+	public class Builder{
+		T start, end;
+		boolean isStartInclusive, isEndInclusive;
+		Interval<T> reference;
+
+		private Builder(Interval<T> reference){
+			this.reference = reference;
+		}
+
+		public Interval<T> build(){
+			Interval<T> res = reference.create();
+			res.end = end;
+			res.start = start;
+			res.isEndInclusive = isEndInclusive;
+			res.isStartInclusive = isStartInclusive;
+			return res;
+		}
+
+		public Builder greater(T value){
+			start = value;
+			isStartInclusive = false;
+			return this;
+		}
+
+		public Builder greaterEqual(T value){
+			start = value;
+			isStartInclusive = true;
+			return this;
+		}
+
+		public Builder less(T value){
+			end = value;
+			isEndInclusive = false;
+			return this;
+		}
+
+		public Builder lessEqual(T value){
+			end = value;
+			isEndInclusive = true;
+			return this;
+		}
+
+		public Builder singlePoint(T value){
+			end = value;
+			start = value;
+			isEndInclusive = true;
+			isStartInclusive = true;
+			return this;
+		}
+	}
+
+	public int compareStarts(Interval<T> other){
+		if (start == null && other.start == null)
+			return 0;
+		if (start == null)
+			return -1;
+		if (other.start == null)
+			return 1;
+		int compare = start.compareTo(other.start);
+		if (compare != 0)
+			return compare;
+		if (isStartInclusive ^ other.isStartInclusive)
+			return isStartInclusive ? -1 : 1;
+		return 0;
+	}
+
+	public int compareEnds(Interval<T> other){
+		if (end == null && other.end == null)
+			return 0;
+		if (end == null)
+			return 1;
+		if (other.end == null)
+			return -1;
+		int compare = end.compareTo(other.end);
+		if (compare != 0)
+			return compare;
+		if (isEndInclusive ^ other.isEndInclusive)
+			return isEndInclusive ? 1 : -1;
+		return 0;
 	}
 }
