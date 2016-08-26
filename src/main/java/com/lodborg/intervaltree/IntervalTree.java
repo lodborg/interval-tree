@@ -1,8 +1,5 @@
 package com.lodborg.intervaltree;
 
-import com.lodborg.intervaltree.IntegerInterval;
-import com.lodborg.intervaltree.Interval;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,17 +9,11 @@ public class IntervalTree<T extends Comparable<? super T>> {
 	public void addInterval(Interval<T> interval){
 		if (interval.isEmpty())
 			return;
-
-		if (root == null){
-			root = new TreeNode<>(interval);
-		} else {
-			root = root.addInterval(interval);
-		}
+		root = TreeNode.addInterval(root, interval);
 	}
 
-	public List<Interval<T>> query(Interval<T> point){
-		List<Interval<T>> res = new ArrayList<>();
-		return TreeNode.query(root, point, res);
+	public List<Interval<T>> query(T point){
+		return TreeNode.query(root, point, new ArrayList<>());
 	}
 
 	public void removeInterval(Interval<T> interval){

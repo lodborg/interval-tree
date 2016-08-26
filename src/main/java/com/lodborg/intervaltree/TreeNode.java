@@ -10,74 +10,31 @@ public class TreeNode<T extends Comparable<? super T>> {
 	T midpoint;
 	int height;
 
-	Comparator<Interval<T>> c1 = new Comparator<Interval<T>>() {
-		@Override
-		public int compare(Interval<T> a, Interval<T> b) {
-			int compare = b.compareEnds(a);
-			return compare != 0 ? compare : b.compareStarts(a);
-		}
-	};
-
-	Comparator<Interval<T>> c2 = new Comparator<Interval<T>>() {
-		@Override
-		public int compare(Interval<T> a, Interval<T> b) {
-			int compare = a.compareStarts(b);
-			return compare != 0 ? compare : a.compareEnds(b);
-		}
-	};
-
 	public TreeNode(Interval<T> interval){
-		decreasing = new TreeSet<>(c1);
-		increasing = new TreeSet<>(c2);
-		/*decreasing = new TreeSet<>((a, b) -> {
-			if (a.getEnd() == null)
-				return -1;
-			if (b.getEnd() == null)
-				return 1;
-			int compare = b.getEnd().compareTo(a.getEnd());
-			if (compare != 0)
-				return compare;
-			if (a.isEndInclusive() ^ b.isEndInclusive())
-				return a.isEndInclusive() ? -1 : 1;
-			return 0;
-		});
-		increasing = new TreeSet<>((a, b) -> {
-			if (a.getStart() == null)
-				return -1;
-			if (b.getStart() == null)
-				return 1;
-			int compare = a.getStart().compareTo(b.getStart());
-			if (compare != 0)
-				return compare;
-			if (a.isStartInclusive() ^ b.isStartInclusive())
-				return a.isStartInclusive() ? -1 : 1;
-			return 0;
-		});*/
+		decreasing = new TreeSet<>(Interval.endComparator);
+		increasing = new TreeSet<>(Interval.startComparator);
+
 		decreasing.add(interval);
 		increasing.add(interval);
 		midpoint = interval.getMidpoint();
 		height = 1;
 	}
 
-	public TreeNode<T> addInterval(Interval<T> interval){
-		if (interval.contains(midpoint)){
-			decreasing.add(interval);
-			increasing.add(interval);
-		} else if (interval.isLeftOf(midpoint)){
-			if (left == null)
-				left = new TreeNode<>(interval);
-			else
-				left = left.addInterval(interval);
-			height = Math.max(height(left), height(right))+1;
+	public static <T extends Comparable<? super T>> TreeNode<T> addInterval(TreeNode<T> root, Interval<T> interval) {
+		if (root == null)
+			return new TreeNode<>(interval);
+		if (interval.contains(root.midpoint)){
+			root.decreasing.add(interval);
+			root.increasing.add(interval);
+		} else if (interval.isLeftOf(root.midpoint)){
+			root.left = addInterval(root.left, interval);
+			root.height = Math.max(height(root.left), height(root.right))+1;
 		} else {
-			if (right == null)
-				right = new TreeNode<>(interval);
-			else
-				right = right.addInterval(interval);
-			height = Math.max(height(left), height(right))+1;
+			root.right = addInterval(root.right, interval);
+			root.height = Math.max(height(root.left), height(root.right))+1;
 		}
 
-		return balanceOut();
+		return root.balanceOut();
 	}
 
 	public int height(){
@@ -90,7 +47,6 @@ public class TreeNode<T extends Comparable<? super T>> {
 
 	private TreeNode<T> balanceOut(){
 		int balance = height(left) - height(right);
-
 		if (balance < -1){
 			// The tree is right-heavy.
 			if (height(right.left) > height(right.right)){
@@ -133,7 +89,6 @@ public class TreeNode<T extends Comparable<? super T>> {
 	private TreeNode<T> assimilateOverlappingIntervals(TreeNode<T> from) {
 		if (from.increasing.size() == 0)
 			return deleteNode(from);
-		Interval.Builder ref = from.increasing.first().getBuilder();
 		ArrayList<Interval<T>> tmp = new ArrayList<>();
 
 		if (midpoint.compareTo(from.midpoint) < 0){
@@ -160,20 +115,19 @@ public class TreeNode<T extends Comparable<? super T>> {
 		return from;
 	}
 
-
-	public static <T extends Comparable<? super T>> List<Interval<T>> query(TreeNode<T> root, Interval<T> point, List<Interval<T>> res) {
+	public static <T extends Comparable<? super T>> List<Interval<T>> query(TreeNode<T> root, T point, List<Interval<T>> res) {
 		if (root == null)
 			return res;
-		if (point.isLeftOf(root.midpoint)){
+		if (point.compareTo(root.midpoint) <= 0){
 			for (Interval<T> next: root.increasing){
-				if (point.compareStarts(next) < 0)
+				if (next.isRightOf(point))
 					break;
 				res.add(next);
 			}
 			return TreeNode.query(root.left, point, res);
 		} else{
 			for (Interval<T> next: root.decreasing){
-				if (point.compareEnds(next) > 0)
+				if (next.isLeftOf(point))
 					break;
 				res.add(next);
 			}

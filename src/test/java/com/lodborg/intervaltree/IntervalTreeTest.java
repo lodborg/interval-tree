@@ -13,7 +13,6 @@ public class IntervalTreeTest {
 	@Test
 	public void firstTest() {
 		IntervalTree<Integer> tree = new IntervalTree<>();
-		Builder ref = new IntegerInterval().getBuilder();
 
 		tree.addInterval(new IntegerInterval(10, 20, Bounded.CLOSED));
 		tree.addInterval(new IntegerInterval(20, 40, Bounded.CLOSED_LEFT));
@@ -24,34 +23,34 @@ public class IntervalTreeTest {
 		tree.addInterval(new IntegerInterval(17, Unbounded.RIGHT_CLOSED));
 		tree.addInterval(new IntegerInterval());
 
-		assertEquals(5, tree.query(ref.singlePoint(15).build()).size());
-		assertEquals(2, tree.query(ref.singlePoint(-20).build()).size());
-		assertEquals(3, tree.query(ref.singlePoint(-17).build()).size());
-		assertEquals(5, tree.query(ref.singlePoint(11).build()).size());
-		assertEquals(3, tree.query(ref.singlePoint(-8).build()).size());
+		assertEquals(5, tree.query(15).size());
+		assertEquals(2, tree.query(-20).size());
+		assertEquals(3, tree.query(-17).size());
+		assertEquals(5, tree.query(11).size());
+		assertEquals(3, tree.query(-8).size());
 
 		tree = new IntervalTree<>();
 		tree.addInterval(new IntegerInterval(10, 20, Bounded.OPEN));
 		tree.addInterval(new IntegerInterval(10, 12, Bounded.OPEN));
 		tree.addInterval(new IntegerInterval(-1000, 8, Bounded.CLOSED));
 
-		assertEquals(2, tree.query(ref.singlePoint(11).build()).size());
-		assertEquals(0, tree.query(ref.singlePoint(9).build()).size());
-		assertEquals(1, tree.query(ref.singlePoint(0).build()).size());
+		assertEquals(2, tree.query(11).size());
+		assertEquals(0, tree.query(9).size());
+		assertEquals(1, tree.query(0).size());
 
 		tree = new IntervalTree<>();
 		tree.addInterval(new IntegerInterval(7450, Unbounded.LEFT_OPEN));
 		tree.addInterval(new IntegerInterval(209, Unbounded.RIGHT_OPEN));
 		tree.addInterval(new IntegerInterval(2774, Unbounded.RIGHT_CLOSED));
 
-		assertEquals(1, tree.query(ref.singlePoint(8659).build()).size());
+		assertEquals(1, tree.query(8659).size());
 
 		tree = new IntervalTree<>();
 		tree.addInterval(new IntegerInterval(6213, Unbounded.RIGHT_OPEN));
 		tree.addInterval(new IntegerInterval(684, Unbounded.LEFT_CLOSED));
 		tree.addInterval(new IntegerInterval(-4657, -4612, Bounded.OPEN));
 
-		assertEquals(1, tree.query(ref.singlePoint(359).build()).size());
+		assertEquals(1, tree.query(359).size());
 
 		tree = new IntervalTree<>();
 		tree.addInterval(new IntegerInterval().create(8705, true, 9158, true));
@@ -60,11 +59,11 @@ public class IntervalTreeTest {
 		tree.addInterval(new IntegerInterval().create(315, false, 408, true));
 		tree.addInterval(new IntegerInterval().create(965, false, 1218, true));
 
-		assertEquals(2, tree.query(ref.singlePoint(9042).build()).size());
+		assertEquals(2, tree.query(9042).size());
 
 		tree = new IntervalTree<>();
 		tree.addInterval(new IntegerInterval().create(2988, true, 3362, false));
-		assertEquals(1, tree.query(ref.singlePoint(2988).build()).size());
+		assertEquals(1, tree.query(2988).size());
 
 		tree = new IntervalTree<>();
 		tree.addInterval(new IntegerInterval().create(8457, true, 8926, true));
@@ -72,9 +71,14 @@ public class IntervalTreeTest {
 		tree.addInterval(new IntegerInterval().create(null, true, -523, true));
 		tree.addInterval(new IntegerInterval().create(-5398, false, -5250, true));
 		tree.addInterval(new IntegerInterval().create(-2912, false, -2727, true));
+		assertEquals(1, tree.query(2988).size());
 
-		List<Interval<Integer>> list = tree.query(ref.singlePoint(2988).build());
-		assertEquals(1, list.size());
+		tree = new IntervalTree<>();
+		tree.addInterval(new IntegerInterval().create(91449, true, 91468, true));
+		tree.addInterval(new IntegerInterval().create(-74038, false, -74037, true));
+		tree.addInterval(new IntegerInterval().create(-53053, false, null, true));
+		List<Interval<Integer>> list = tree.query(-74038);
+		assertEquals(0, list.size());
 	}
 
 	@Test
@@ -92,18 +96,17 @@ public class IntervalTreeTest {
 		IntervalTree<Integer> tree = new IntervalTree<>();
 		int amount = 3000000;
 		int range = 100000;
-		int lengthRange = 50;
+		int lengthRange = 100;
 		int checks = 100;
-		Builder ref = new IntegerInterval().getBuilder();
 
 		for (int i=0; i<amount; i++){
 			int kind = getRandomInRange(0, 7);
 			IntegerInterval next;
 			int begin, length;
-			begin = getRandomInRange(-range, range);
+			/*begin = getRandomInRange(-range, range);
 			length = getRandomInRange(0, lengthRange);
-			next = new IntegerInterval(begin, begin+length, Bounded.CLOSED);
-			/*switch (kind){
+			next = new IntegerInterval(begin, begin+length, Bounded.CLOSED);*/
+			switch (kind){
 				case 0:
 					begin = getRandomInRange(-range, range);
 					length = getRandomInRange(0, lengthRange);
@@ -140,7 +143,7 @@ public class IntervalTreeTest {
 					begin = getRandomInRange(-range, range);
 					next = new IntegerInterval(begin, Unbounded.RIGHT_OPEN);
 					break;
-			}*/
+			}
 
 			list.add(next);
 			long time = System.currentTimeMillis();
@@ -150,11 +153,11 @@ public class IntervalTreeTest {
 
 		for (int i=0; i<checks; i++){
 			Integer point = getRandomInRange(-range, range);
-			boolean check = check(tree, list, ref.singlePoint(point).build());
+			boolean check = check(tree, list, point);
 			if (!check){
 				System.out.println("Point: "+point);
 				for (Interval<Integer> interval: list){
-					//print(interval);
+					print(interval);
 				}
 			}
 			assertEquals(true, check);
@@ -166,17 +169,7 @@ public class IntervalTreeTest {
 		System.out.println(", "+inter.isStartInclusive+", "+(inter.end == null ? "null" : inter.end)+", "+inter.isEndInclusive+"));");
 	}
 
-	Comparator<Interval<Integer>> comparator = new Comparator<Interval<Integer>>() {
-		@Override
-		public int compare(Interval<Integer> a, Interval<Integer> b) {
-			int compare = a.compareStarts(b);
-			if (compare != 0)
-				return compare;
-			return a.compareEnds(b);
-		}
-	};
-
-	private boolean check(IntervalTree<Integer> tree, List<Interval<Integer>> list, Interval<Integer> point) {
+	private boolean check(IntervalTree<Integer> tree, List<Interval<Integer>> list, Integer point) {
 		long time = System.currentTimeMillis();
 		List<Interval<Integer>> fromList = linearCheck(list, point);
 		listTime += System.currentTimeMillis() - time;
@@ -184,24 +177,20 @@ public class IntervalTreeTest {
 		List<Interval<Integer>> fromTree = tree.query(point);
 		treeTime += System.currentTimeMillis() - time;
 		//return true;
-		Collections.sort(fromList, comparator);
-		Collections.sort(fromTree, comparator);
+		Collections.sort(fromList, Interval.startComparator);
+		Collections.sort(fromTree, Interval.startComparator);
 		int treeIndex = 0;
 		for (int listIndex = 0; listIndex < fromList.size(); listIndex++){
-			if (listIndex > 0 && equals(fromList.get(listIndex), fromList.get(listIndex-1)))
+			if (listIndex > 0 && fromList.get(listIndex).equals(fromList.get(listIndex-1)))
 				continue;
-			if (treeIndex > fromTree.size() || !equals(fromList.get(listIndex), fromTree.get(treeIndex)))
+			if (treeIndex > fromTree.size() || !fromList.get(listIndex).equals(fromTree.get(treeIndex)))
 				return false;
 			treeIndex++;
 		}
 		return treeIndex == fromTree.size();
 	}
 
-	private boolean equals(Interval a, Interval b){
-		return a.compareEnds(b) == 0 && a.compareStarts(b) == 0;
-	}
-
-	private List<Interval<Integer>> linearCheck(List<Interval<Integer>> list, Interval<Integer> point) {
+	private List<Interval<Integer>> linearCheck(List<Interval<Integer>> list, Integer point) {
 		List<Interval<Integer>> res = new ArrayList<>();
 		for (Interval<Integer> interval: list){
 			if (interval.contains(point))
