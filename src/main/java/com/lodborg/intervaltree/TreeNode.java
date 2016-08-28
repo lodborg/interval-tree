@@ -1,14 +1,12 @@
 package com.lodborg.intervaltree;
 
-import com.lodborg.intervaltree.Interval;
-
 import java.util.*;
 
 public class TreeNode<T extends Comparable<? super T>> {
-	TreeSet<Interval<T>> decreasing, increasing;
-	TreeNode<T> left, right;
-	T midpoint;
-	int height;
+	protected NavigableSet<Interval<T>> decreasing, increasing;
+	protected volatile TreeNode<T> left, right;
+	protected T midpoint;
+	protected volatile int height;
 
 	public TreeNode(Interval<T> interval){
 		decreasing = new TreeSet<>(Interval.endComparator);
@@ -26,6 +24,7 @@ public class TreeNode<T extends Comparable<? super T>> {
 		if (interval.contains(root.midpoint)){
 			root.decreasing.add(interval);
 			root.increasing.add(interval);
+			return root;
 		} else if (interval.isLeftOf(root.midpoint)){
 			root.left = addInterval(root.left, interval);
 			root.height = Math.max(height(root.left), height(root.right))+1;

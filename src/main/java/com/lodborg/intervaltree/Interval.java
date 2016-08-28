@@ -265,7 +265,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
 	 * the same starting point, and omit one of the intervals.
 	 *
 	 * Since this is a static method of a generic class, it involves unchecked calls to class methods. It is left to
-	 * ths user to ensure that she compares intervals from the same class.
+	 * ths user to ensure that she compares intervals from the same class, otherwise an exception might be thrown.
 	 */
 	public static Comparator<Interval> startComparator = new Comparator<Interval>() {
 		@Override
@@ -289,7 +289,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
 	 * the same end point, and omit one of the intervals.
 	 *
 	 * Since this is a static method of a generic class, it involves unchecked calls to class methods. It is left to
-	 * ths user to ensure that she compares intervals from the same class.
+	 * ths user to ensure that she compares intervals from the same class, otherwise an exception might be thrown.
 	 */
 	public static Comparator<Interval> endComparator = new Comparator<Interval>() {
 		@Override
