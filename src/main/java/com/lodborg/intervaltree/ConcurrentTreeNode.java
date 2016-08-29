@@ -2,11 +2,13 @@ package com.lodborg.intervaltree;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 @SuppressWarnings("Duplicates")
 public class ConcurrentTreeNode<T extends Comparable<? super T>>{
-	private final ConcurrentSkipListSet<Interval<T>> decreasing, increasing;
+	private final NavigableSet<Interval<T>> decreasing, increasing;
 	private volatile ConcurrentTreeNode<T> left, right;
 	private final T midpoint;
 	private volatile int height;
@@ -23,8 +25,8 @@ public class ConcurrentTreeNode<T extends Comparable<? super T>>{
 	}
 
 	public ConcurrentTreeNode(Interval<T> interval){
-		decreasing = new ConcurrentSkipListSet<>(Interval.endComparator);
-		increasing = new ConcurrentSkipListSet<>(Interval.startComparator);
+		decreasing = new TreeSet<>(Interval.endComparator);
+		increasing = new TreeSet<>(Interval.startComparator);
 		decreasing.add(interval);
 		increasing.add(interval);
 
@@ -34,8 +36,10 @@ public class ConcurrentTreeNode<T extends Comparable<? super T>>{
 
 	public void addInterval(Interval<T> interval) throws InterruptedException {
 		if (interval.contains(midpoint)) {
-			decreasing.add(interval);
-			increasing.add(interval);
+			synchronized (increasing) {
+				decreasing.add(interval);
+				increasing.add(interval);
+			}
 			return;
 		}
 
@@ -51,6 +55,10 @@ public class ConcurrentTreeNode<T extends Comparable<? super T>>{
 			}
 
 			leftLock.readLock();
+			if (left == null){
+				leftLock.unlock();
+				addInterval(interval);
+			}
 			left.addInterval(interval);
 			if (leftLock.promoteToWriteIfLast()){
 				left = left.balanceOut();
@@ -68,6 +76,10 @@ public class ConcurrentTreeNode<T extends Comparable<? super T>>{
 			}
 
 			rightLock.readLock();
+			if (right == null){
+				rightLock.unlock();
+				addInterval(interval);
+			}
 			right.addInterval(interval);
 			if (rightLock.promoteToWriteIfLast()){
 				right = right.balanceOut();
@@ -85,6 +97,10 @@ public class ConcurrentTreeNode<T extends Comparable<? super T>>{
 	}
 
 	protected ConcurrentTreeNode<T> balanceOut(){
+		if (increasing.size() == 0) {
+			ConcurrentTreeNode<T> next = deleteNode(this);
+			return next != null ? next.balanceOut() : null;
+		}
 		height = Math.max(height(left), height(right)) + 1;
 		int balance = height(left) - height(right);
 		if (balance < -1) {
@@ -131,14 +147,14 @@ public class ConcurrentTreeNode<T extends Comparable<? super T>>{
 			return deleteNode(from);
 		ArrayList<Interval<T>> tmp = new ArrayList<>();
 
-		if (midpoint.compareTo(from.midpoint) < 0){
-			for (Interval<T> next: from.increasing){
+		if (midpoint.compareTo(from.midpoint) < 0) {
+			for (Interval<T> next : from.increasing) {
 				if (next.isRightOf(midpoint))
 					break;
 				tmp.add(next);
 			}
 		} else {
-			for (Interval<T> next: from.decreasing){
+			for (Interval<T> next : from.decreasing) {
 				if (next.isLeftOf(midpoint))
 					break;
 				tmp.add(next);
@@ -149,9 +165,10 @@ public class ConcurrentTreeNode<T extends Comparable<? super T>>{
 		from.decreasing.removeAll(tmp);
 		increasing.addAll(tmp);
 		decreasing.addAll(tmp);
-		if (from.increasing.size() == 0){
+		if (from.increasing.size() == 0) {
 			return deleteNode(from);
 		}
+
 		return from;
 	}
 
@@ -175,7 +192,43 @@ public class ConcurrentTreeNode<T extends Comparable<? super T>>{
 		}
 	}
 
-	public static <T extends Comparable<? super T>> ConcurrentTreeNode<T> removeInterval(ConcurrentTreeNode<T> root, Interval<T> interval) {
+	protected boolean removeInterval(Interval<T> interval) throws InterruptedException {
+		if (interval.contains(midpoint)){
+			synchronized (increasing) {
+				decreasing.remove(interval);
+				increasing.remove(interval);
+			}
+			return true;
+		}
+
+		if (interval.isLeftOf(midpoint)){
+			leftLock.readLock();
+			if (left == null){
+				leftLock.unlock();
+				return false;
+			}
+			if (left.removeInterval(interval)){
+				if(leftLock.promoteToWriteIfLast())
+					left = left.balanceOut();
+			}
+			leftLock.unlock();
+		} else {
+			rightLock.readLock();
+			if (right == null){
+				rightLock.unlock();
+				return false;
+			}
+			if (right.removeInterval(interval)){
+				if (rightLock.promoteToWriteIfLast())
+					right = right.balanceOut();
+			}
+			rightLock.unlock();
+		}
+
+		return true;
+	}
+
+	/*public static <T extends Comparable<? super T>> ConcurrentTreeNode<T> removeInterval(ConcurrentTreeNode<T> root, Interval<T> interval) {
 		if (root == null)
 			return null;
 		if (interval.contains(root.midpoint)){
@@ -191,7 +244,7 @@ public class ConcurrentTreeNode<T extends Comparable<? super T>>{
 			root.right = removeInterval(root.right, interval);
 		}
 		return root.balanceOut();
-	}
+	}*/
 
 	private static <T extends Comparable<? super T>> ConcurrentTreeNode<T> deleteNode(ConcurrentTreeNode<T> root) {
 		if (root == null || root.left == null && root.right == null)

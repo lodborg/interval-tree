@@ -33,9 +33,19 @@ public class ConcurrentIntervalTree<T extends Comparable<? super T>> {
 		return ConcurrentTreeNode.query(root, point, new ArrayList<>());
 	}
 
-	public void removeInterval(Interval<T> interval){
-		if (interval.isEmpty() || root == null)
+	public void removeInterval(Interval<T> interval) throws InterruptedException {
+		if (interval.isEmpty())
 			return;
-		root = ConcurrentTreeNode.removeInterval(root, interval);
+		lock.readLock();
+		if (root == null){
+			lock.unlock();
+			return;
+		}
+		if (root.removeInterval(interval)){
+			if (lock.promoteToWriteIfLast()){
+				root = root.balanceOut();
+			}
+		}
+		lock.unlock();
 	}
 }
