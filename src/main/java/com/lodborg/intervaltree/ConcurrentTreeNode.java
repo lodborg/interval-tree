@@ -1,14 +1,11 @@
 package com.lodborg.intervaltree;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NavigableSet;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 @SuppressWarnings("Duplicates")
 public class ConcurrentTreeNode<T extends Comparable<? super T>>{
-	private final NavigableSet<Interval<T>> decreasing, increasing;
+	private SortedSet<Interval<T>> decreasing, increasing;
 	private volatile ConcurrentTreeNode<T> left, right;
 	private final T midpoint;
 	private volatile int height;
@@ -145,26 +142,38 @@ public class ConcurrentTreeNode<T extends Comparable<? super T>>{
 	private ConcurrentTreeNode<T> assimilateOverlappingIntervals(ConcurrentTreeNode<T> from) {
 		if (from.increasing.size() == 0)
 			return deleteNode(from);
-		ArrayList<Interval<T>> tmp = new ArrayList<>();
+		SortedSet<Interval<T>> recipientIncreasing = new TreeSet<>(increasing);
+		SortedSet<Interval<T>> recipientDecreasing = new TreeSet<>(decreasing);
+		SortedSet<Interval<T>> donorIncreasing = new TreeSet<>(Interval.startComparator);
+		SortedSet<Interval<T>> donorDecreasing = new TreeSet<>(Interval.endComparator);
 
 		if (midpoint.compareTo(from.midpoint) < 0) {
 			for (Interval<T> next : from.increasing) {
-				if (next.isRightOf(midpoint))
-					break;
-				tmp.add(next);
+				if (next.isRightOf(midpoint)){
+					donorIncreasing.add(next);
+					donorDecreasing.add(next);
+				} else {
+					recipientIncreasing.add(next);
+					recipientDecreasing.add(next);
+
+				}
 			}
 		} else {
 			for (Interval<T> next : from.decreasing) {
-				if (next.isLeftOf(midpoint))
-					break;
-				tmp.add(next);
+				if (next.isLeftOf(midpoint)){
+					donorIncreasing.add(next);
+					donorDecreasing.add(next);
+				} else {
+					recipientIncreasing.add(next);
+					recipientDecreasing.add(next);
+				}
 			}
 		}
 
-		from.increasing.removeAll(tmp);
-		from.decreasing.removeAll(tmp);
-		increasing.addAll(tmp);
-		decreasing.addAll(tmp);
+		from.increasing = donorIncreasing;
+		from.decreasing = donorDecreasing;
+		increasing = recipientIncreasing;
+		decreasing = recipientDecreasing;
 		if (from.increasing.size() == 0) {
 			return deleteNode(from);
 		}
