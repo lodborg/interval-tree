@@ -21,21 +21,17 @@ public class IntegerInterval extends Interval<Integer> {
 	public Integer getMidpoint() {
 		if (isEmpty())
 			return null;
-		int from = start == null ? Integer.MIN_VALUE : start;
-		int to = end ==  null ? Integer.MAX_VALUE : end;
-		return (int)(from + (to-(long)from)/2);
+		long from = start == null ? Integer.MIN_VALUE : start;
+		long to = end ==  null ? Integer.MAX_VALUE : end;
+		return (int)((from + to)/2);
 	}
 
 	@Override
 	public boolean isEmpty() {
 		if (start == null || end == null)
 			return false;
-		if (start > end)
-			return true;
-		if (start.equals(end) && (!isEndInclusive || !isStartInclusive))
-			return true;
 		if (start+1 == end && !isEndInclusive && !isStartInclusive)
 			return true;
-		return false;
+		return super.isEmpty();
 	}
 }

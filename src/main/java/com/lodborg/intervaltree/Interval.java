@@ -18,7 +18,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
 	}
 
 	public enum Unbounded {
-		LEFT_OPEN, LEFT_CLOSED, RIGHT_OPEN, RIGHT_CLOSED
+		OPEN_LEFT, CLOSED_LEFT, OPEN_RIGHT, CLOSED_RIGHT
 	}
 
 	public Interval(){
@@ -47,22 +47,22 @@ public abstract class Interval<T extends Comparable<? super T>> {
 
 	public Interval(T value, Unbounded type){
 		switch (type){
-			case LEFT_OPEN:
+			case OPEN_LEFT:
 				start = value;
 				isStartInclusive = false;
 				isEndInclusive = true;
 				break;
-			case LEFT_CLOSED:
+			case CLOSED_LEFT:
 				start = value;
 				isStartInclusive = true;
 				isEndInclusive = true;
 				break;
-			case RIGHT_OPEN:
+			case OPEN_RIGHT:
 				end = value;
 				isStartInclusive = true;
 				isEndInclusive = false;
 				break;
-			case RIGHT_CLOSED:
+			case CLOSED_RIGHT:
 				end = value;
 				isStartInclusive = true;
 				isEndInclusive = true;
@@ -70,7 +70,17 @@ public abstract class Interval<T extends Comparable<? super T>> {
 		}
 	}
 
-	public abstract boolean isEmpty();
+	public boolean isEmpty() {
+		if (start == null || end == null)
+			return false;
+		int compare = start.compareTo(end);
+		if (compare>0)
+			return true;
+		if (compare == 0 && (!isEndInclusive || !isStartInclusive))
+			return true;
+		return false;
+	}
+
 	protected abstract Interval<T> create();
 	public abstract T getMidpoint();
 
@@ -315,5 +325,41 @@ public abstract class Interval<T extends Comparable<? super T>> {
 			return false;
 		Interval other = (Interval)obj;
 		return startComparator.compare(this, other) == 0 && endComparator.compare(this, other) == 0;
+	}
+
+	public Builder builder(){
+		return new Builder(this);
+	}
+
+	public class Builder {
+		private Interval<T> interval;
+
+		private Builder(Interval<T> ref){
+			interval = ref.create();
+		}
+
+		public Builder greater(T start){
+			interval.start = start;
+			interval.isStartInclusive = false;
+			return this;
+		}
+		public Builder greaterEqual(T start){
+			interval.start = start;
+			interval.isStartInclusive = true;
+			return this;
+		}
+		public Builder less(T end){
+			interval.end = end;
+			interval.isEndInclusive = false;
+			return this;
+		}
+		public Builder lessEqual(T end){
+			interval.end = end;
+			interval.isEndInclusive = true;
+			return this;
+		}
+		public Interval<T> build(){
+			return interval;
+		}
 	}
 }

@@ -19,8 +19,8 @@ public class IntervalTreeTest {
 		tree.addInterval(new IntegerInterval(15, 35, Bounded.CLOSED));
 		tree.addInterval(new IntegerInterval(-20, 15, Bounded.OPEN));
 		tree.addInterval(new IntegerInterval(0, 16, Bounded.OPEN));
-		tree.addInterval(new IntegerInterval(32, Unbounded.LEFT_CLOSED));
-		tree.addInterval(new IntegerInterval(17, Unbounded.RIGHT_CLOSED));
+		tree.addInterval(new IntegerInterval(32, Unbounded.CLOSED_LEFT));
+		tree.addInterval(new IntegerInterval(17, Unbounded.CLOSED_RIGHT));
 		tree.addInterval(new IntegerInterval());
 
 		assertEquals(5, tree.query(15).size());
@@ -39,15 +39,15 @@ public class IntervalTreeTest {
 		assertEquals(1, tree.query(0).size());
 
 		tree = new IntervalTree<>();
-		tree.addInterval(new IntegerInterval(7450, Unbounded.LEFT_OPEN));
-		tree.addInterval(new IntegerInterval(209, Unbounded.RIGHT_OPEN));
-		tree.addInterval(new IntegerInterval(2774, Unbounded.RIGHT_CLOSED));
+		tree.addInterval(new IntegerInterval(7450, Unbounded.OPEN_LEFT));
+		tree.addInterval(new IntegerInterval(209, Unbounded.OPEN_RIGHT));
+		tree.addInterval(new IntegerInterval(2774, Unbounded.CLOSED_RIGHT));
 
 		assertEquals(1, tree.query(8659).size());
 
 		tree = new IntervalTree<>();
-		tree.addInterval(new IntegerInterval(6213, Unbounded.RIGHT_OPEN));
-		tree.addInterval(new IntegerInterval(684, Unbounded.LEFT_CLOSED));
+		tree.addInterval(new IntegerInterval(6213, Unbounded.OPEN_RIGHT));
+		tree.addInterval(new IntegerInterval(684, Unbounded.CLOSED_LEFT));
 		tree.addInterval(new IntegerInterval(-4657, -4612, Bounded.OPEN));
 
 		assertEquals(1, tree.query(359).size());
@@ -129,19 +129,19 @@ public class IntervalTreeTest {
 					break;
 				case 4:
 					begin = getRandomInRange(-range, range);
-					next = new IntegerInterval(begin, Unbounded.LEFT_CLOSED);
+					next = new IntegerInterval(begin, Unbounded.CLOSED_LEFT);
 					break;
 				case 5:
 					begin = getRandomInRange(-range, range);
-					next = new IntegerInterval(begin, Unbounded.LEFT_OPEN);
+					next = new IntegerInterval(begin, Unbounded.OPEN_LEFT);
 					break;
 				case 6:
 					begin = getRandomInRange(-range, range);
-					next = new IntegerInterval(begin, Unbounded.RIGHT_CLOSED);
+					next = new IntegerInterval(begin, Unbounded.CLOSED_RIGHT);
 					break;
 				default:
 					begin = getRandomInRange(-range, range);
-					next = new IntegerInterval(begin, Unbounded.RIGHT_OPEN);
+					next = new IntegerInterval(begin, Unbounded.OPEN_RIGHT);
 					break;
 			}
 

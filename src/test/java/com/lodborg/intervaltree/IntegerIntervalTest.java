@@ -7,7 +7,6 @@ import com.lodborg.intervaltree.Interval.*;
 public class IntegerIntervalTest {
 	@Test
 	public void intersectsInterval() {
-
 		IntegerInterval main = new IntegerInterval(-2897, 19, Bounded.CLOSED_RIGHT);
 
 		assertEquals(main.intersects(new IntegerInterval(19, 222, Bounded.CLOSED_LEFT)), true);
@@ -65,47 +64,47 @@ public class IntegerIntervalTest {
 		assertEquals(main.contains(new IntegerInterval(9197, 11111, Bounded.OPEN)), true);
 		assertEquals(main.contains(new IntegerInterval(9197, 11112, Bounded.OPEN)), true);
 
-		main = new IntegerInterval(200, Unbounded.LEFT_CLOSED); // [200, +inf)
+		main = new IntegerInterval(200, Unbounded.CLOSED_LEFT); // [200, +inf)
 		assertEquals(main.contains(new IntegerInterval(200, 250, Bounded.CLOSED)), true);
 		assertEquals(main.contains(new IntegerInterval(200, 250, Bounded.OPEN)), true);
-		assertEquals(main.contains(new IntegerInterval(201, Unbounded.LEFT_CLOSED)), true);
-		assertEquals(main.contains(new IntegerInterval(200, Unbounded.LEFT_CLOSED)), true);
-		assertEquals(main.contains(new IntegerInterval(199, Unbounded.LEFT_CLOSED)), false);
+		assertEquals(main.contains(new IntegerInterval(201, Unbounded.CLOSED_LEFT)), true);
+		assertEquals(main.contains(new IntegerInterval(200, Unbounded.CLOSED_LEFT)), true);
+		assertEquals(main.contains(new IntegerInterval(199, Unbounded.CLOSED_LEFT)), false);
 		assertEquals(main.contains(new IntegerInterval(199, 200, Bounded.CLOSED)), false);
 
-		main = new IntegerInterval(200, Unbounded.LEFT_OPEN); // (200, +inf)
+		main = new IntegerInterval(200, Unbounded.OPEN_LEFT); // (200, +inf)
 		assertEquals(main.contains(new IntegerInterval(200, 250, Bounded.CLOSED)), false);
 		assertEquals(main.contains(new IntegerInterval(200, 250, Bounded.OPEN)), true);
-		assertEquals(main.contains(new IntegerInterval(201, Unbounded.LEFT_CLOSED)), true);
-		assertEquals(main.contains(new IntegerInterval(200, Unbounded.LEFT_CLOSED)), false);
-		assertEquals(main.contains(new IntegerInterval(199, Unbounded.LEFT_CLOSED)), false);
+		assertEquals(main.contains(new IntegerInterval(201, Unbounded.CLOSED_LEFT)), true);
+		assertEquals(main.contains(new IntegerInterval(200, Unbounded.CLOSED_LEFT)), false);
+		assertEquals(main.contains(new IntegerInterval(199, Unbounded.CLOSED_LEFT)), false);
 		assertEquals(main.contains(new IntegerInterval(199, 200, Bounded.CLOSED)), false);
 
-		main = new IntegerInterval(81, Unbounded.RIGHT_OPEN); // (-inf, 81)
+		main = new IntegerInterval(81, Unbounded.OPEN_RIGHT); // (-inf, 81)
 		assertEquals(main.contains(new IntegerInterval(10, 81, Bounded.CLOSED)), false);
 		assertEquals(main.contains(new IntegerInterval(15, 81, Bounded.OPEN)), true);
-		assertEquals(main.contains(new IntegerInterval(10, Unbounded.LEFT_CLOSED)), false);
-		assertEquals(main.contains(new IntegerInterval(81, Unbounded.RIGHT_CLOSED)), false);
-		assertEquals(main.contains(new IntegerInterval(80, Unbounded.RIGHT_CLOSED)), true);
-		assertEquals(main.contains(new IntegerInterval(82, Unbounded.RIGHT_CLOSED)), false);
+		assertEquals(main.contains(new IntegerInterval(10, Unbounded.CLOSED_LEFT)), false);
+		assertEquals(main.contains(new IntegerInterval(81, Unbounded.CLOSED_RIGHT)), false);
+		assertEquals(main.contains(new IntegerInterval(80, Unbounded.CLOSED_RIGHT)), true);
+		assertEquals(main.contains(new IntegerInterval(82, Unbounded.CLOSED_RIGHT)), false);
 		assertEquals(main.contains(new IntegerInterval(80, 81, Bounded.CLOSED)), false);
 
-		main = new IntegerInterval(81, Unbounded.RIGHT_CLOSED); // (-inf, 81]
+		main = new IntegerInterval(81, Unbounded.CLOSED_RIGHT); // (-inf, 81]
 		assertEquals(main.contains(new IntegerInterval(10, 81, Bounded.CLOSED)), true);
 		assertEquals(main.contains(new IntegerInterval(15, 81, Bounded.OPEN)), true);
-		assertEquals(main.contains(new IntegerInterval(10, Unbounded.LEFT_CLOSED)), false);
-		assertEquals(main.contains(new IntegerInterval(81, Unbounded.RIGHT_CLOSED)), true);
-		assertEquals(main.contains(new IntegerInterval(80, Unbounded.RIGHT_CLOSED)), true);
-		assertEquals(main.contains(new IntegerInterval(82, Unbounded.RIGHT_CLOSED)), false);
+		assertEquals(main.contains(new IntegerInterval(10, Unbounded.CLOSED_LEFT)), false);
+		assertEquals(main.contains(new IntegerInterval(81, Unbounded.CLOSED_RIGHT)), true);
+		assertEquals(main.contains(new IntegerInterval(80, Unbounded.CLOSED_RIGHT)), true);
+		assertEquals(main.contains(new IntegerInterval(82, Unbounded.CLOSED_RIGHT)), false);
 		assertEquals(main.contains(new IntegerInterval(80, 81, Bounded.CLOSED)), true);
 
 		main = new IntegerInterval(); // (-inf, +inf)
 		assertEquals(main.contains(new IntegerInterval()), true);
 		assertEquals(main.contains(new IntegerInterval(10, 81, Bounded.CLOSED)), true);
 		assertEquals(main.contains(new IntegerInterval(10, 81, Bounded.OPEN)), true);
-		assertEquals(main.contains(new IntegerInterval(10, Unbounded.LEFT_CLOSED)), true);
-		assertEquals(main.contains(new IntegerInterval(10, Unbounded.LEFT_OPEN)), true);
-		assertEquals(main.contains(new IntegerInterval(10, Unbounded.RIGHT_CLOSED)), true);
-		assertEquals(main.contains(new IntegerInterval(10, Unbounded.RIGHT_OPEN)), true);
+		assertEquals(main.contains(new IntegerInterval(10, Unbounded.CLOSED_LEFT)), true);
+		assertEquals(main.contains(new IntegerInterval(10, Unbounded.OPEN_LEFT)), true);
+		assertEquals(main.contains(new IntegerInterval(10, Unbounded.CLOSED_RIGHT)), true);
+		assertEquals(main.contains(new IntegerInterval(10, Unbounded.OPEN_RIGHT)), true);
 	}
 }
