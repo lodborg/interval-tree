@@ -1,4 +1,7 @@
 # Interval Tree
+
+[![Build Status](https://travis-ci.org/lodborg/interval-tree.svg?branch=master)](https://travis-ci.org/lodborg/interval-tree)
+
 Implementation of dynamic interval trees. Both concurrent and non-concurrent flavors are available.
 * Supports lookup for all intervals intersecting a query point in O(logn + k) worst-case time, where n is the amount of intervals stored in the tree and k is the amount of intervals returned by the lookup.
 * Insertions and deletions are in *average* O(logn) time and O(n) worst-case time.
