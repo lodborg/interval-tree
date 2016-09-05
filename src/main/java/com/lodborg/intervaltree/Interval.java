@@ -10,8 +10,8 @@ import java.util.Comparator;
  * Java 7), abstract class was our only option left.
  */
 public abstract class Interval<T extends Comparable<? super T>> {
-	protected T start, end;
-	protected boolean isStartInclusive, isEndInclusive;
+	private T start, end;
+	private boolean isStartInclusive, isEndInclusive;
 
 	public enum Bounded {
 		OPEN, CLOSED, CLOSED_RIGHT, CLOSED_LEFT
@@ -110,7 +110,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
 		if (start == null || end == null) {
 			return false;
 		}
-		return start.compareTo(end) == 0;
+		return start.compareTo(end) == 0 && isStartInclusive && isEndInclusive;
 	}
 
 	public boolean contains(T query){
@@ -139,8 +139,10 @@ public abstract class Interval<T extends Comparable<? super T>> {
 	}
 
 	public Interval<T> getIntersection(Interval<T> other){
-		if (other == null)
+		if (other == null || isEmpty() || other.isEmpty())
 			return null;
+		// Make sure that the one with the smaller starting point gets intersected with the other.
+		// If necessary, swap the intervals
 		if ((other.start == null && start != null) || (start != null && start.compareTo(other.start)>0))
 			return other.getIntersection(this);
 		if (end != null && other.start != null && (end.compareTo(other.start) < 0 || (end.compareTo(other.start) == 0 && (!isEndInclusive || !other.isStartInclusive))))
@@ -149,6 +151,8 @@ public abstract class Interval<T extends Comparable<? super T>> {
 		T newStart, newEnd;
 		boolean isNewStartInclusive, isNewEndInclusive;
 
+		// If other.start is null, this means my start is also null, because we made sure
+		// that the caller object hast the smaller start point => the new start is null
 		if (other.start == null){
 			newStart = null;
 			isNewStartInclusive = true;
@@ -179,7 +183,8 @@ public abstract class Interval<T extends Comparable<? super T>> {
 				isNewEndInclusive = other.isEndInclusive;
 			}
 		}
-		return create(newStart, isNewStartInclusive, newEnd, isNewEndInclusive);
+		Interval<T> intersection = create(newStart, isNewStartInclusive, newEnd, isNewEndInclusive);
+		return intersection.isEmpty() ? null : intersection;
 	}
 
 	public boolean contains(Interval<T> another){
@@ -321,9 +326,9 @@ public abstract class Interval<T extends Comparable<? super T>> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null || !this.getClass().isAssignableFrom(obj.getClass()))
+		if (obj == null || !(obj instanceof Interval))
 			return false;
-		Interval other = (Interval)obj;
+		Interval<T> other = (Interval<T>) obj;
 		return startComparator.compare(this, other) == 0 && endComparator.compare(this, other) == 0;
 	}
 

@@ -157,43 +157,33 @@ public class TreeNode<T extends Comparable<? super T>> {
 			return null;
 		if (root.left == null && root.right == null)
 			return null;
-		if (root.left == null){
-			TreeNode<T> node = root.right;
-			TreeNode<T> parent = null;
-			while (node.left != null){
-				parent = node;
-				node = node.left;
-			}
-			if (parent != null) {
-				parent.left = node.right;
-				node.right = root.right;
-			}
 
-			TreeNode<T> newRoot = node;
-			node = node.right;
-			while (node != null){
-				newRoot.assimilateOverlappingIntervals(node);
-				node = node.left;
-			}
-			return newRoot.balanceOut();
+		Stack<TreeNode<T>> stack = new Stack<>();
+
+		if (root.left == null){
+			// If the left child is empty, then the right subtree can consist of at most
+			// one node, otherwise it would have been unbalanced. So, just return
+			// the right child.
+			return root.right;
 		} else {
 			TreeNode<T> node = root.left;
-			TreeNode<T> parent = null;
 			while (node.right != null){
-				parent = node;
+				stack.push(node);
 				node = node.right;
 			}
-			if (parent != null) {
-				parent.right = node.left;
+			if (!stack.isEmpty()) {
+				stack.peek().right = node.left;
 				node.left = root.left;
 			}
 			node.right = root.right;
 
 			TreeNode<T> newRoot = node;
-			node = node.left;
-			while (node != null){
-				newRoot.assimilateOverlappingIntervals(node);
-				node = node.right;
+			while (!stack.isEmpty()){
+				node = stack.pop();
+				if (!stack.isEmpty())
+					stack.peek().right = newRoot.assimilateOverlappingIntervals(node);
+				else
+					newRoot.left = newRoot.assimilateOverlappingIntervals(node);
 			}
 			return newRoot.balanceOut();
 		}

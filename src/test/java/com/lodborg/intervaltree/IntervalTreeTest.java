@@ -1,14 +1,195 @@
 package com.lodborg.intervaltree;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+
 import com.lodborg.intervaltree.Interval.*;
 
 import java.util.*;
 
+import static org.junit.Assert.*;
+
 public class IntervalTreeTest {
-	long listTime, treeTime;
-	long treeCreationTime;
+
+	@Test
+	public void test_deleteNodeAfterAssimilation(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer> a = new IntegerInterval(0, 100, Bounded.CLOSED);
+		Interval<Integer> b = new IntegerInterval(30, 40, Bounded.CLOSED_LEFT);
+		Interval<Integer> c = new IntegerInterval(10, 20, Bounded.CLOSED_RIGHT);
+		tree.addInterval(a);
+		tree.addInterval(b);
+		tree.addInterval(c);
+		assertNull(tree.root.right);
+		assertTrue(tree.root.increasing.contains(a));
+		assertTrue(tree.root.increasing.contains(b));
+		assertTrue(tree.root.decreasing.contains(a));
+		assertTrue(tree.root.decreasing.contains(b));
+		assertEquals(2, tree.root.increasing.size());
+		assertEquals(2, tree.root.decreasing.size());
+		assertTrue(tree.root.left.decreasing.contains(c));
+		assertTrue(tree.root.left.increasing.contains(c));
+		assertEquals(1, tree.root.left.increasing.size());
+	}
+
+	@Test
+	public void test_removeIntervalForcesRootDelete(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer> a = new IntegerInterval(20, 30, Bounded.CLOSED);
+		Interval<Integer> b = new IntegerInterval(0, 10, Bounded.CLOSED_LEFT);
+		Interval<Integer> c = new IntegerInterval(40, 50, Bounded.CLOSED_RIGHT);
+		tree.addInterval(a);
+		tree.addInterval(b);
+		tree.addInterval(c);
+		tree.removeInterval(a);
+		assertNull(tree.root.left);
+		assertFalse(tree.root.increasing.contains(a));
+		assertFalse(tree.root.decreasing.contains(a));
+		assertTrue(tree.root.decreasing.contains(b));
+		assertTrue(tree.root.increasing.contains(b));
+		assertTrue(tree.root.right.decreasing.contains(c));
+		assertTrue(tree.root.right.increasing.contains(c));
+		assertEquals(1, tree.root.decreasing.size());
+		assertEquals(1, tree.root.increasing.size());
+		assertEquals(0, tree.query(22).size());
+	}
+
+	@Test
+	public void test_removeFromNodeWithEmptyLeftChild(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer> a = new IntegerInterval(20, 30, Bounded.CLOSED);
+		Interval<Integer> b = new IntegerInterval(40, 50, Bounded.CLOSED_RIGHT);
+		tree.addInterval(a);
+		tree.addInterval(b);
+		tree.removeInterval(a);
+		assertNull(tree.root.left);
+		assertNull(tree.root.right);
+		assertFalse(tree.root.increasing.contains(a));
+		assertFalse(tree.root.decreasing.contains(a));
+		assertTrue(tree.root.decreasing.contains(b));
+		assertTrue(tree.root.increasing.contains(b));
+		assertEquals(1, tree.root.decreasing.size());
+		assertEquals(1, tree.root.increasing.size());
+	}
+
+	@Test
+	public void test_removeRootThenAssimilateIntervalsFromInnerNodeAfterBubbleUp(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer> a = new IntegerInterval(20, 30, Bounded.CLOSED);
+		Interval<Integer> b = new IntegerInterval(0, 10, Bounded.CLOSED_LEFT);
+		Interval<Integer> c = new IntegerInterval(40, 50, Bounded.CLOSED_RIGHT);
+		Interval<Integer> d = new IntegerInterval(7, 9, Bounded.OPEN);
+		tree.addInterval(a);
+		tree.addInterval(b);
+		tree.addInterval(c);
+		tree.addInterval(d);
+		tree.removeInterval(a);
+
+		assertNull(tree.root.left);
+		assertEquals(2, tree.root.increasing.size());
+		assertEquals(2, tree.root.decreasing.size());
+		assertTrue(tree.root.increasing.contains(b));
+		assertTrue(tree.root.increasing.contains(d));
+		assertTrue(tree.root.decreasing.contains(b));
+		assertTrue(tree.root.decreasing.contains(d));
+		assertTrue(tree.root.right.decreasing.contains(c));
+		assertTrue(tree.root.right.increasing.contains(c));
+	}
+
+	@Test
+	public void test_removeRootReplaceWithDeepNodeLeftAndAssimilateIntervals(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer> a = new IntegerInterval(0, 100, Bounded.CLOSED);
+		Interval<Integer> b = new IntegerInterval(10, 30, Bounded.CLOSED_LEFT);
+		Interval<Integer> c = new IntegerInterval(60, 70, Bounded.CLOSED_RIGHT);
+		Interval<Integer> d = new IntegerInterval(80, 90, Bounded.OPEN);
+		Interval<Integer> e = new IntegerInterval(0, 5, Bounded.OPEN);
+		Interval<Integer> f = new IntegerInterval(25, 49, Bounded.OPEN);
+		Interval<Integer> g = new IntegerInterval(39, 44, Bounded.OPEN);
+		tree.addInterval(a);
+		tree.addInterval(b);
+		tree.addInterval(c);
+		tree.addInterval(d);
+		tree.addInterval(e);
+		tree.addInterval(f);
+		tree.addInterval(g);
+		tree.removeInterval(a);
+
+		assertNull(tree.root.left.right);
+		assertTrue(tree.root.decreasing.contains(g));
+		assertTrue(tree.root.decreasing.contains(f));
+		assertTrue(tree.root.increasing.contains(g));
+		assertTrue(tree.root.increasing.contains(f));
+		assertFalse(tree.root.decreasing.contains(a));
+		assertFalse(tree.root.increasing.contains(a));
+	}
+
+	@Test
+	public void test_removeRootReplaceWithDeepAssimilatingAnotherInnerNode(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer> a = new IntegerInterval(0, 100, Bounded.CLOSED);
+		Interval<Integer> b = new IntegerInterval(10, 40, Bounded.CLOSED_LEFT);
+		Interval<Integer> c = new IntegerInterval(60, 70, Bounded.CLOSED_RIGHT);
+		Interval<Integer> d = new IntegerInterval(80, 90, Bounded.OPEN);
+		Interval<Integer> e = new IntegerInterval(0, 5, Bounded.OPEN);
+		Interval<Integer> f = new IntegerInterval(25, 27, Bounded.OPEN);
+		Interval<Integer> g = new IntegerInterval(37, 40, Bounded.OPEN);
+		tree.addInterval(a);
+		tree.addInterval(b);
+		tree.addInterval(c);
+		tree.addInterval(d);
+		tree.addInterval(e);
+		tree.addInterval(f);
+		tree.addInterval(g);
+
+		TreeNode<Integer> nodeF = tree.root.left.right;
+		TreeNode<Integer> nodeG = tree.root.left.right.right;
+		TreeNode<Integer> nodeE = tree.root.left.left;
+		TreeNode<Integer> nodeC = tree.root.right;
+
+		tree.removeInterval(a);
+
+		assertTrue(tree.root == nodeG);
+		assertTrue(tree.root.left == nodeF);
+		assertTrue(nodeF.left == nodeE);
+		assertNull(nodeF.right);
+		assertTrue(nodeG.right == nodeC);
+	}
+
+	@Test
+	public void test_addEmptyInterval(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval a = new IntegerInterval(5, 6, Bounded.OPEN);
+		tree.addInterval(a);
+		assertNull(tree.root);
+	}
+
+	@Test
+	public void test_removeFromEmptyTree(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		tree.removeInterval(new IntegerInterval(10, 20, Bounded.CLOSED));
+		assertNull(tree.root);
+	}
+
+	@Test
+	public void test_removeNonExistingInterval(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer> a = new IntegerInterval(20, 30, Bounded.CLOSED);
+		Interval<Integer> b = new IntegerInterval(0, 10, Bounded.CLOSED_LEFT);
+		Interval<Integer> c = new IntegerInterval(40, 50, Bounded.CLOSED_RIGHT);
+		tree.addInterval(a);
+		tree.addInterval(b);
+		tree.addInterval(c);
+		tree.removeInterval(new IntegerInterval(10, 20, Bounded.CLOSED));
+		assertTrue(tree.root.decreasing.contains(a));
+		assertTrue(tree.root.increasing.contains(a));
+		assertEquals(1, tree.root.decreasing.size());
+		assertTrue(tree.root.left.increasing.contains(b));
+		assertTrue(tree.root.left.decreasing.contains(b));
+		assertEquals(1, tree.root.left.decreasing.size());
+		assertTrue(tree.root.right.increasing.contains(c));
+		assertTrue(tree.root.right.decreasing.contains(c));
+		assertEquals(1, tree.root.right.decreasing.size());
+	}
 
 	@Test
 	public void firstTest() {
@@ -79,127 +260,5 @@ public class IntervalTreeTest {
 		tree.addInterval(new IntegerInterval().create(-53053, false, null, true));
 		List<Interval<Integer>> list = tree.query(-74038);
 		assertEquals(0, list.size());
-	}
-
-	@Test
-	public void randomized(){
-		for (int i=0; i<1; i++){
-			randomizedSingleRun();
-		}
-		System.out.println("List time: "+listTime);
-		System.out.println("Tree time: "+treeTime);
-		System.out.println("Tree creation time: "+treeCreationTime);
-	}
-
-	public void randomizedSingleRun(){
-		List<Interval<Integer>> list = new ArrayList<>();
-		IntervalTree<Integer> tree = new IntervalTree<>();
-		int amount = 3000000;
-		int range = 100000;
-		int lengthRange = 100;
-		int checks = 100;
-
-		for (int i=0; i<amount; i++){
-			int kind = getRandomInRange(0, 7);
-			IntegerInterval next;
-			int begin, length;
-			/*begin = getRandomInRange(-range, range);
-			length = getRandomInRange(0, lengthRange);
-			next = new IntegerInterval(begin, begin+length, Bounded.CLOSED);*/
-			switch (kind){
-				case 0:
-					begin = getRandomInRange(-range, range);
-					length = getRandomInRange(0, lengthRange);
-					next = new IntegerInterval(begin, begin+length, Bounded.CLOSED);
-					break;
-				case 1:
-					begin = getRandomInRange(-range, range);
-					length = getRandomInRange(0, lengthRange);
-					next = new IntegerInterval(begin, begin+length, Bounded.OPEN);
-					break;
-				case 2:
-					begin = getRandomInRange(-range, range);
-					length = getRandomInRange(0, lengthRange);
-					next = new IntegerInterval(begin, begin+length, Bounded.CLOSED_LEFT);
-					break;
-				case 3:
-					begin = getRandomInRange(-range, range);
-					length = getRandomInRange(0, lengthRange);
-					next = new IntegerInterval(begin, begin+length, Bounded.CLOSED_RIGHT);
-					break;
-				case 4:
-					begin = getRandomInRange(-range, range);
-					next = new IntegerInterval(begin, Unbounded.CLOSED_LEFT);
-					break;
-				case 5:
-					begin = getRandomInRange(-range, range);
-					next = new IntegerInterval(begin, Unbounded.OPEN_LEFT);
-					break;
-				case 6:
-					begin = getRandomInRange(-range, range);
-					next = new IntegerInterval(begin, Unbounded.CLOSED_RIGHT);
-					break;
-				default:
-					begin = getRandomInRange(-range, range);
-					next = new IntegerInterval(begin, Unbounded.OPEN_RIGHT);
-					break;
-			}
-
-			list.add(next);
-			long time = System.currentTimeMillis();
-			tree.addInterval(next);
-			treeCreationTime += System.currentTimeMillis() - time;
-		}
-
-		for (int i=0; i<checks; i++){
-			Integer point = getRandomInRange(-range, range);
-			boolean check = check(tree, list, point);
-			if (!check){
-				System.out.println("Point: "+point);
-				for (Interval<Integer> interval: list){
-					print(interval);
-				}
-			}
-			assertEquals(true, check);
-		}
-	}
-
-	private void print(Interval<Integer> inter){
-		System.out.print("tree.addInterval(new IntegerInterval().create("+(inter.start == null ? "null" : inter.start));
-		System.out.println(", "+inter.isStartInclusive+", "+(inter.end == null ? "null" : inter.end)+", "+inter.isEndInclusive+"));");
-	}
-
-	private boolean check(IntervalTree<Integer> tree, List<Interval<Integer>> list, Integer point) {
-		long time = System.currentTimeMillis();
-		List<Interval<Integer>> fromList = linearCheck(list, point);
-		listTime += System.currentTimeMillis() - time;
-		time = System.currentTimeMillis();
-		List<Interval<Integer>> fromTree = tree.query(point);
-		treeTime += System.currentTimeMillis() - time;
-		//return true;
-		Collections.sort(fromList, Interval.startComparator);
-		Collections.sort(fromTree, Interval.startComparator);
-		int treeIndex = 0;
-		for (int listIndex = 0; listIndex < fromList.size(); listIndex++){
-			if (listIndex > 0 && fromList.get(listIndex).equals(fromList.get(listIndex-1)))
-				continue;
-			if (treeIndex > fromTree.size() || !fromList.get(listIndex).equals(fromTree.get(treeIndex)))
-				return false;
-			treeIndex++;
-		}
-		return treeIndex == fromTree.size();
-	}
-
-	private List<Interval<Integer>> linearCheck(List<Interval<Integer>> list, Integer point) {
-		List<Interval<Integer>> res = new ArrayList<>();
-		for (Interval<Integer> interval: list){
-			if (interval.contains(point))
-				res.add(interval);
-		}
-		return res;
-	}
-
-	private int getRandomInRange(int min, int max){
-		return min + (int)(Math.random()*(Math.abs(min)+Math.abs(max)+1));
 	}
 }
