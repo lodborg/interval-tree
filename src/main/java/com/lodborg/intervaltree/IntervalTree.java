@@ -13,7 +13,7 @@ public class IntervalTree<T extends Comparable<? super T>> {
 	}
 
 	public List<Interval<T>> query(T point){
-		return TreeNode.query(root, point, new ArrayList<>());
+		return TreeNode.query(root, point, new ArrayList<Interval<T>>());
 	}
 
 	public void removeInterval(Interval<T> interval){
