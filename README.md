@@ -1,6 +1,6 @@
 # Interval Tree
 
-[![Build Status](https://travis-ci.org/lodborg/interval-tree.svg?branch=master)](https://travis-ci.org/lodborg/interval-tree) [![codecov.io](https://codecov.io/github/lodborg/interval-tree/coverage.svg?branch=master)](https://codecov.io/gh/lodborg/interval-tree)
+[![Build Status](https://travis-ci.org/lodborg/interval-tree.svg?branch=master)](https://travis-ci.org/lodborg/interval-tree) &nbsp; [![codecov.io](https://codecov.io/github/lodborg/interval-tree/coverage.svg?branch=master)](https://codecov.io/gh/lodborg/interval-tree)
 
 Implementation of dynamic interval trees.
 * Supports lookup for all intervals intersecting a query point in O(logn + k) worst-case time, where n is the amount of intervals stored in the tree and k is the amount of intervals returned by the lookup.
@@ -12,7 +12,7 @@ Implementation of dynamic interval trees.
 ## Usage
 
 ### Interval classes
-The interval tree is built around a generic interval class. You can easily extend it and build your own classes to fit your needs. Additionally, the library provides several implementations of the most common interval classes that you might need to get you started:
+The interval tree is built around a generic interval class. You can easily extend it and build your own classes to fit your needs. To get you started, the library provides implementations for the most common interval classes that you might need:
 * `IntegerInterval`
 * `DoubleInterval`
 * `DateInterval`
@@ -66,7 +66,7 @@ If you need a special interval class, you can create your own subclass of the ge
 public T getMidpoint()      // returns the middle of the interval. This is needed for the tree.
 protected Interval create() // returns a newly created instance of the class. Needed to avoid reflexion.
 ```
-The `Interval` class requires its generic type variable to implement the `Comparable` interface. Because of that, there are many interval methods, which will be available to your subclass out of the box. Please refer to the full documentation of the `Interval` class for the full API. Here we will use the subclass `IntegerInterval` (probably the most intuitive one) to illustrate some examples:
+The `Interval` class requires its generic type variable to implement the `Comparable` interface. Because of that, there are many interval methods, which will be available to your subclass out of the box. Please refer to the documentation of the `Interval` class for the full API. To illustrate some examples, here we will use the subclass `IntegerInterval`, since it is probably the most intuitive one:
 ```java
 IntegerInterval main = new IntergerInterval(0, 100, Bounded.CLOSED);    // the interval [0, 100]
 IntegerInterval next = new IntegerInterval(20, Unbounded.OPEN_RIGHT);   // the interval (negative infinity, 20)

@@ -86,8 +86,6 @@ public class TreeNode<T extends Comparable<? super T>> {
 	}
 
 	private TreeNode<T> assimilateOverlappingIntervals(TreeNode<T> from) {
-		if (from.increasing.size() == 0)
-			return deleteNode(from);
 		ArrayList<Interval<T>> tmp = new ArrayList<>();
 
 		if (midpoint.compareTo(from.midpoint) < 0){
@@ -114,7 +112,7 @@ public class TreeNode<T extends Comparable<? super T>> {
 		return from;
 	}
 
-	public static <T extends Comparable<? super T>> List<Interval<T>> query(TreeNode<T> root, T point, List<Interval<T>> res) {
+	public static <T extends Comparable<? super T>> Set<Interval<T>> query(TreeNode<T> root, T point, Set<Interval<T>> res) {
 		if (root == null)
 			return res;
 		if (point.compareTo(root.midpoint) <= 0){
@@ -153,12 +151,8 @@ public class TreeNode<T extends Comparable<? super T>> {
 	}
 
 	private static <T extends Comparable<? super T>> TreeNode<T> deleteNode(TreeNode<T> root) {
-		if (root == null)
-			return null;
 		if (root.left == null && root.right == null)
 			return null;
-
-		Stack<TreeNode<T>> stack = new Stack<>();
 
 		if (root.left == null){
 			// If the left child is empty, then the right subtree can consist of at most
@@ -167,6 +161,7 @@ public class TreeNode<T extends Comparable<? super T>> {
 			return root.right;
 		} else {
 			TreeNode<T> node = root.left;
+			Stack<TreeNode<T>> stack = new Stack<>();
 			while (node.right != null){
 				stack.push(node);
 				node = node.right;

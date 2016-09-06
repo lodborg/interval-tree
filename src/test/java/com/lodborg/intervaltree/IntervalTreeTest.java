@@ -212,6 +212,223 @@ public class IntervalTreeTest {
 	}
 
 	@Test
+	public void test_queryIntervalNormal(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval a = new IntegerInterval(22, Unbounded.CLOSED_RIGHT);
+		IntegerInterval b = new IntegerInterval(7, 13, Bounded.CLOSED);
+		IntegerInterval c = new IntegerInterval(21, 24, Bounded.OPEN);
+		IntegerInterval d = new IntegerInterval(32, Unbounded.CLOSED_LEFT);
+
+		tree.addInterval(a);
+		tree.addInterval(b);
+		tree.addInterval(c);
+		tree.addInterval(d);
+		IntegerInterval queryInterval = new IntegerInterval(18, 29, Bounded.CLOSED);
+		Set<Interval<Integer>> res = tree.query(queryInterval);
+
+		assertEquals(2, res.size());
+		assertTrue(res.contains(a));
+		assertTrue(res.contains(c));
+		assertFalse(res.contains(b));
+		assertFalse(res.contains(d));
+	}
+
+	@Test
+	public void test_queryIntervalOpenAndClosedEndpoints(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval aa = new IntegerInterval(18, Unbounded.CLOSED_RIGHT);
+		IntegerInterval ab = new IntegerInterval(18, Unbounded.CLOSED_LEFT);
+		IntegerInterval ac = new IntegerInterval(18, Unbounded.OPEN_LEFT);
+		IntegerInterval ad = new IntegerInterval(18, Unbounded.OPEN_RIGHT);
+
+		IntegerInterval ba = new IntegerInterval(29, Unbounded.CLOSED_RIGHT);
+		IntegerInterval bb = new IntegerInterval(29, Unbounded.CLOSED_LEFT);
+		IntegerInterval bc = new IntegerInterval(29, Unbounded.OPEN_LEFT);
+		IntegerInterval bd = new IntegerInterval(29, Unbounded.OPEN_RIGHT);
+
+		IntegerInterval c = new IntegerInterval(7, 13, Bounded.CLOSED);
+		IntegerInterval d = new IntegerInterval(21, 24, Bounded.OPEN);
+		IntegerInterval e = new IntegerInterval(32, 45, Bounded.CLOSED_RIGHT);
+
+		IntegerInterval queryInterval = new IntegerInterval(18, 29, Bounded.CLOSED_RIGHT);
+
+		IntegerInterval[] arr = new IntegerInterval[]{
+				aa, ab, ac, ad, ba, bb, bc, bd, c, d, e
+		};
+
+		for (IntegerInterval interval: arr)
+			tree.addInterval(interval);
+
+		Set<Interval<Integer>> res = tree.query(queryInterval);
+		List<IntegerInterval> expected = Arrays.asList(ab, ac, ba, bb, bd, d);
+		assertTrue(res.containsAll(expected));
+		assertEquals(6, res.size());
+	}
+
+	@Test
+	public void test_queryIntervalReturnsASuperInterval(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval a = new IntegerInterval(8, 20, Bounded.CLOSED_LEFT);
+		IntegerInterval query = new IntegerInterval(0, 100, Bounded.OPEN);
+		tree.addInterval(a);
+		Set<Interval<Integer>> set = tree.query(query);
+		assertEquals(1, set.size());
+		assertTrue(set.contains(a));
+	}
+
+	@Test
+	public void test_queryIntervalChangesInTheTreeDontAffectReturnedSet(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval aa = new IntegerInterval(18, Unbounded.CLOSED_RIGHT);
+		IntegerInterval ab = new IntegerInterval(18, Unbounded.CLOSED_LEFT);
+		IntegerInterval ac = new IntegerInterval(18, Unbounded.OPEN_LEFT);
+		IntegerInterval ad = new IntegerInterval(18, Unbounded.OPEN_RIGHT);
+
+		IntegerInterval ba = new IntegerInterval(29, Unbounded.CLOSED_RIGHT);
+		IntegerInterval bb = new IntegerInterval(29, Unbounded.CLOSED_LEFT);
+		IntegerInterval bc = new IntegerInterval(29, Unbounded.OPEN_LEFT);
+		IntegerInterval bd = new IntegerInterval(29, Unbounded.OPEN_RIGHT);
+
+		IntegerInterval c = new IntegerInterval(7, 13, Bounded.CLOSED);
+		IntegerInterval d = new IntegerInterval(21, 24, Bounded.OPEN);
+		IntegerInterval e = new IntegerInterval(32, 45, Bounded.CLOSED_RIGHT);
+
+		IntegerInterval queryInterval = new IntegerInterval(18, 29, Bounded.CLOSED_RIGHT);
+		IntegerInterval[] arr = new IntegerInterval[]{
+				aa, ab, ac, ad, ba, bb, bc, bd, c, d, e
+		};
+
+		for (IntegerInterval interval: arr)
+			tree.addInterval(interval);
+		Set<Interval<Integer>> res = tree.query(queryInterval);
+		for (IntegerInterval interval: arr)
+			tree.removeInterval(interval);
+
+		List<IntegerInterval> expected = Arrays.asList(ab, ac, ba, bb, bd, d);
+		assertTrue(res.containsAll(expected));
+		assertEquals(6, res.size());
+	}
+
+	@Test
+	public void test_preventMemoryLeakInTreeMapAfterRemove(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval a = new IntegerInterval(1, 5, Bounded.CLOSED);
+		IntegerInterval b = new IntegerInterval(7, 20, Bounded.CLOSED_RIGHT);
+		IntegerInterval c = new IntegerInterval(5, 18, Bounded.CLOSED_LEFT);
+		IntegerInterval d = new IntegerInterval(20, 23, Bounded.CLOSED_LEFT);
+
+		tree.addInterval(a);
+		tree.addInterval(b);
+		tree.addInterval(c);
+		tree.addInterval(d);
+		tree.removeInterval(a);
+		tree.removeInterval(d);
+		tree.removeInterval(new IntegerInterval(128, 200, Bounded.CLOSED));
+
+		assertNull(tree.endPointsMap.get(1));
+		assertNotNull(tree.endPointsMap.get(5));
+		assertTrue(tree.endPointsMap.get(5).contains(c));
+		assertEquals(1, tree.endPointsMap.get(5).size());
+
+		assertNull(tree.endPointsMap.get(23));
+		assertNotNull(tree.endPointsMap.get(20));
+		assertTrue(tree.endPointsMap.get(20).contains(b));
+		assertEquals(1, tree.endPointsMap.get(20).size());
+	}
+
+	@Test
+	public void test_queryIntervalWithNewEndPoints(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval a = new IntegerInterval(1, 5, Bounded.CLOSED);
+		IntegerInterval b = new IntegerInterval(7, 20, Bounded.OPEN);
+		IntegerInterval c = new IntegerInterval(5, 18, Bounded.CLOSED_LEFT);
+
+		tree.addInterval(a);
+		tree.addInterval(b);
+		tree.addInterval(c);
+		IntegerInterval queryInterval = new IntegerInterval(3, 6, Bounded.CLOSED);
+		Set<Interval<Integer>> set = tree.query(queryInterval);
+
+		assertEquals(2, set.size());
+		assertTrue(set.contains(a));
+		assertTrue(set.contains(c));
+	}
+
+	@Test
+	public void test_queryIntervalOffByOne(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval a = new IntegerInterval(1, 5, Bounded.OPEN);
+		tree.addInterval(a);
+		assertEquals(0, tree.query(new IntegerInterval(4, 20, Bounded.OPEN)).size());
+		assertEquals(1, tree.query(new IntegerInterval(4, 20, Bounded.CLOSED)).size());
+		assertEquals(1, tree.query(new IntegerInterval(4, 20, Bounded.CLOSED_LEFT)).size());
+		assertEquals(0, tree.query(new IntegerInterval(4, 20, Bounded.CLOSED_RIGHT)).size());
+
+		tree = new IntervalTree<>();
+		a = new IntegerInterval(1, 5, Bounded.CLOSED);
+		tree.addInterval(a);
+		assertEquals(1, tree.query(new IntegerInterval(4, 20, Bounded.OPEN)).size());
+		assertEquals(1, tree.query(new IntegerInterval(4, 20, Bounded.CLOSED)).size());
+		assertEquals(1, tree.query(new IntegerInterval(4, 20, Bounded.CLOSED_LEFT)).size());
+		assertEquals(1, tree.query(new IntegerInterval(4, 20, Bounded.CLOSED_RIGHT)).size());
+
+		tree = new IntervalTree<>();
+		a = new IntegerInterval(1, 5, Bounded.OPEN);
+		tree.addInterval(a);
+		assertEquals(0, tree.query(new IntegerInterval(-5, 2, Bounded.OPEN)).size());
+		assertEquals(1, tree.query(new IntegerInterval(-5, 2, Bounded.CLOSED)).size());
+		assertEquals(0, tree.query(new IntegerInterval(-5, 2, Bounded.CLOSED_LEFT)).size());
+		assertEquals(1, tree.query(new IntegerInterval(-5, 2, Bounded.CLOSED_RIGHT)).size());
+
+		tree = new IntervalTree<>();
+		a = new IntegerInterval(1, 5, Bounded.CLOSED);
+		tree.addInterval(a);
+		assertEquals(1, tree.query(new IntegerInterval(-5, 2, Bounded.OPEN)).size());
+		assertEquals(1, tree.query(new IntegerInterval(-5, 2, Bounded.CLOSED)).size());
+		assertEquals(1, tree.query(new IntegerInterval(-5, 2, Bounded.CLOSED_LEFT)).size());
+		assertEquals(1, tree.query(new IntegerInterval(-5, 2, Bounded.CLOSED_RIGHT)).size());
+	}
+
+	@Test
+	public void test_queryIntervalOppositeEndpointsEqual(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval a = new IntegerInterval(1, 5, Bounded.OPEN);
+		tree.addInterval(a);
+
+		assertEquals(0, tree.query(new IntegerInterval(5, 10, Bounded.OPEN)).size());
+		assertEquals(0, tree.query(new IntegerInterval(5, 10, Bounded.CLOSED)).size());
+		assertEquals(0, tree.query(new IntegerInterval(5, 10, Bounded.CLOSED_LEFT)).size());
+		assertEquals(0, tree.query(new IntegerInterval(5, 10, Bounded.CLOSED_RIGHT)).size());
+
+		tree = new IntervalTree<>();
+		a = new IntegerInterval(1, 5, Bounded.CLOSED);
+		tree.addInterval(a);
+
+		assertEquals(0, tree.query(new IntegerInterval(5, 10, Bounded.OPEN)).size());
+		assertEquals(1, tree.query(new IntegerInterval(5, 10, Bounded.CLOSED)).size());
+		assertEquals(1, tree.query(new IntegerInterval(5, 10, Bounded.CLOSED_LEFT)).size());
+		assertEquals(0, tree.query(new IntegerInterval(5, 10, Bounded.CLOSED_RIGHT)).size());
+
+		tree = new IntervalTree<>();
+		a = new IntegerInterval(1, 5, Bounded.OPEN);
+		tree.addInterval(a);
+
+		assertEquals(0, tree.query(new IntegerInterval(-8, 1, Bounded.OPEN)).size());
+		assertEquals(0, tree.query(new IntegerInterval(-8, 1, Bounded.CLOSED)).size());
+		assertEquals(0, tree.query(new IntegerInterval(-8, 1, Bounded.CLOSED_LEFT)).size());
+		assertEquals(0, tree.query(new IntegerInterval(-8, 1, Bounded.CLOSED_RIGHT)).size());
+
+		tree = new IntervalTree<>();
+		a = new IntegerInterval(1, 5, Bounded.CLOSED);
+		tree.addInterval(a);
+
+		assertEquals(0, tree.query(new IntegerInterval(-8, 1, Bounded.OPEN)).size());
+		assertEquals(1, tree.query(new IntegerInterval(-8, 1, Bounded.CLOSED)).size());
+		assertEquals(0, tree.query(new IntegerInterval(-8, 1, Bounded.CLOSED_LEFT)).size());
+		assertEquals(1, tree.query(new IntegerInterval(-8, 1, Bounded.CLOSED_RIGHT)).size());
+	}
+
+	@Test
 	public void firstTest() {
 		IntervalTree<Integer> tree = new IntervalTree<>();
 
@@ -278,7 +495,6 @@ public class IntervalTreeTest {
 		tree.addInterval(new IntegerInterval().create(91449, true, 91468, true));
 		tree.addInterval(new IntegerInterval().create(-74038, false, -74037, true));
 		tree.addInterval(new IntegerInterval().create(-53053, false, null, true));
-		List<Interval<Integer>> list = tree.query(-74038);
-		assertEquals(0, list.size());
+		assertEquals(0, tree.query(-74038).size());
 	}
 }

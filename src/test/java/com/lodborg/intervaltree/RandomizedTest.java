@@ -106,7 +106,7 @@ public class RandomizedTest {
 		List<Interval<Integer>> fromList = linearCheck(list, point);
 		listTime += System.currentTimeMillis() - time;
 		time = System.currentTimeMillis();
-		List<Interval<Integer>> fromTree = tree.query(point);
+		List<Interval<Integer>> fromTree = new ArrayList<>(tree.query(point));
 		treeTime += System.currentTimeMillis() - time;
 		//return true;
 		Collections.sort(fromList, Interval.startComparator);

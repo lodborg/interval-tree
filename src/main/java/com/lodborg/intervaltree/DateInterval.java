@@ -2,7 +2,7 @@ package com.lodborg.intervaltree;
 
 import java.util.Date;
 
-public class DateInterval extends Interval <Date> {
+public class DateInterval extends Interval<Date> {
 
 	public DateInterval(){}
 
@@ -21,8 +21,20 @@ public class DateInterval extends Interval <Date> {
 
 	@Override
 	public Date getMidpoint() {
-		long start = getStart() == null ? new Date(0).getTime() : getStart().getTime();
+		if (isEmpty())
+			return null;
+		long start = getStart() == null ? new Date(Long.MIN_VALUE).getTime() : getStart().getTime();
 		long end = getEnd() == null ? new Date(Long.MAX_VALUE).getTime() : getEnd().getTime();
+
+		// If the calculation would return the start point and the start point
+		// is actually not in the interval, return the end point.
+		if (start+1 == end && !isStartInclusive())
+			return getEnd();
+
+		// Prevent an overflow
+		if (start <= 0 && end >= 0)
+			return new Date((end + start) / 2);
+
 		return new Date(start + (end-start)/2);
 	}
 }
