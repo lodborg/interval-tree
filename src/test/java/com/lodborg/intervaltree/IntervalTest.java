@@ -84,7 +84,11 @@ public class IntervalTest {
 		set.add(new IntMock(1, 10, Bounded.OPEN));
 		set.add(new IntMock(1, 10, Bounded.CLOSED_LEFT));
 		set.add(new IntMock(1, 10, Bounded.CLOSED_RIGHT));
-		assertEquals(4, set.size());
+		set.add(new IntMock(1, Unbounded.CLOSED_LEFT));
+		set.add(new IntMock(1, Unbounded.CLOSED_RIGHT));
+		set.add(new IntMock(1, Unbounded.OPEN_LEFT));
+		set.add(new IntMock(1, Unbounded.OPEN_RIGHT));
+		assertEquals(8, set.size());
 	}
 
 	@Test
@@ -94,19 +98,78 @@ public class IntervalTest {
 		IntMock c = new IntMock(1, 10, Bounded.CLOSED_LEFT);
 		IntMock d = new IntMock(1, 10, Bounded.CLOSED_RIGHT);
 
-		assertFalse(a.equals(b));
-		assertFalse(a.equals(c));
-		assertFalse(a.equals(d));
-		assertFalse(b.equals(c));
-		assertFalse(b.equals(d));
-		assertFalse(c.equals(d));
+		assertNotEquals(a, b);
+		assertNotEquals(a, c);
+		assertNotEquals(a, d);
+		assertNotEquals(b, c);
+		assertNotEquals(b, d);
+		assertNotEquals(c, d);
 
-		assertFalse(b.equals(a));
-		assertFalse(c.equals(a));
-		assertFalse(d.equals(a));
-		assertFalse(c.equals(b));
-		assertFalse(d.equals(b));
-		assertFalse(d.equals(c));
+		assertNotEquals(b, a);
+		assertNotEquals(c, a);
+		assertNotEquals(d, a);
+		assertNotEquals(c, b);
+		assertNotEquals(d, b);
+		assertNotEquals(d, c);
+
+		assertFalse(a.equals(null));
+		assertFalse(a.equals(new IntMock()));
+
+		assertFalse(a.equals(new IntMock(99, 129, Bounded.OPEN)));
+	}
+
+	@Test
+	public void test_equalSame(){
+		IntMock a = new IntMock(1, 10, Bounded.CLOSED);
+		IntMock b = new IntMock(1, 10, Bounded.OPEN);
+		IntMock c = new IntMock(1, 10, Bounded.CLOSED_LEFT);
+		IntMock d = new IntMock(1, 10, Bounded.CLOSED_RIGHT);
+
+		IntMock aa = new IntMock(1, 10, Bounded.CLOSED);
+		IntMock bb = new IntMock(1, 10, Bounded.OPEN);
+		IntMock cc = new IntMock(1, 10, Bounded.CLOSED_LEFT);
+		IntMock dd = new IntMock(1, 10, Bounded.CLOSED_RIGHT);
+
+		IntMock e = new IntMock(20, Unbounded.CLOSED_LEFT);
+		IntMock f = new IntMock(20, Unbounded.CLOSED_RIGHT);
+		IntMock g = new IntMock(20, Unbounded.OPEN_LEFT);
+		IntMock h = new IntMock(20, Unbounded.OPEN_RIGHT);
+
+		IntMock ee = new IntMock(20, Unbounded.CLOSED_LEFT);
+		IntMock ff = new IntMock(20, Unbounded.CLOSED_RIGHT);
+		IntMock gg = new IntMock(20, Unbounded.OPEN_LEFT);
+		IntMock hh = new IntMock(20, Unbounded.OPEN_RIGHT);
+
+		assertTrue(a.equals(aa));
+		assertEquals(b, bb);
+		assertEquals(c, cc);
+		assertEquals(d, dd);
+		assertEquals(e, ee);
+		assertEquals(f, ff);
+		assertEquals(g, gg);
+		assertEquals(h, hh);
+	}
+
+	@Test
+	public void nothingContainsDegenerate(){
+		IntMock[] arr = new IntMock[]{
+				new IntMock(0, 5, Bounded.OPEN),
+				new IntMock(0, 5, Bounded.CLOSED),
+				new IntMock(0, 5, Bounded.CLOSED_RIGHT),
+				new IntMock(0, 5, Bounded.CLOSED_LEFT),
+				new IntMock(0, Unbounded.CLOSED_LEFT),
+				new IntMock(0, Unbounded.CLOSED_RIGHT),
+				new IntMock(0, Unbounded.OPEN_LEFT),
+				new IntMock(0, Unbounded.OPEN_RIGHT),
+				new IntMock(11, 10, Bounded.OPEN)
+		};
+
+		for (IntMock a: arr) {
+			assertFalse(a.contains(new IntMock()));
+			assertFalse(a.contains((Integer) null));
+			assertFalse(a.contains((Interval<Integer>) null));
+			assertFalse(a.contains(new IntMock(30, 20, Bounded.OPEN)));
+		}
 	}
 
 	@Test
@@ -438,7 +501,7 @@ public class IntervalTest {
 	}
 
 	@Test
-	public void isLeftOfInterval(){
+	public void isLeftOfBoundedInterval(){
 		IntMock a = new IntMock(5, 10, Bounded.OPEN);
 		assertTrue(a.isLeftOf(new IntMock(10, 11, Bounded.CLOSED)));
 		assertTrue(a.isLeftOf(new IntMock(10, 11, Bounded.OPEN)));
@@ -454,6 +517,43 @@ public class IntervalTest {
 		assertFalse(a.isLeftOf(new IntMock(6, 12, Bounded.CLOSED_RIGHT)));
 		assertFalse(a.isLeftOf(new IntMock(1, 7, Bounded.CLOSED_LEFT)));
 		assertFalse(a.isLeftOf(new IntMock(1, 4, Bounded.CLOSED)));
+	}
+
+	@Test
+	public void isLeftOfUnboundedInterval(){
+		IntMock a = new IntMock(5, Unbounded.CLOSED_LEFT);
+		assertFalse(a.isLeftOf(new IntMock(0, 5, Bounded.CLOSED)));
+		assertFalse(a.isLeftOf(new IntMock(0, 5, Bounded.OPEN)));
+		assertFalse(a.isLeftOf(new IntMock(5, 11, Bounded.OPEN)));
+		assertFalse(a.isLeftOf(new IntMock(5, 11, Bounded.CLOSED)));
+		assertFalse(a.isLeftOf(new IntMock(6, 8, Bounded.CLOSED)));
+		assertFalse(a.isLeftOf(new IntMock(4, 12, Bounded.CLOSED_RIGHT)));
+		assertFalse(a.isLeftOf(new IntMock(1, 7, Bounded.CLOSED_LEFT)));
+
+		a = new IntMock(5, Unbounded.OPEN_LEFT);
+		assertFalse(a.isLeftOf(new IntMock(0, 5, Bounded.CLOSED)));
+		assertFalse(a.isLeftOf(new IntMock(0, 5, Bounded.OPEN)));
+		assertFalse(a.isLeftOf(new IntMock(5, 11, Bounded.OPEN)));
+		assertFalse(a.isLeftOf(new IntMock(5, 11, Bounded.CLOSED)));
+		assertFalse(a.isLeftOf(new IntMock(6, 8, Bounded.CLOSED)));
+		assertFalse(a.isLeftOf(new IntMock(4, 12, Bounded.CLOSED_RIGHT)));
+		assertFalse(a.isLeftOf(new IntMock(1, 7, Bounded.CLOSED_LEFT)));
+
+		a = new IntMock(5, Unbounded.CLOSED_RIGHT);
+		assertFalse(a.isLeftOf(new IntMock(0, 5, Bounded.CLOSED)));
+		assertFalse(a.isLeftOf(new IntMock(0, 5, Bounded.OPEN)));
+		assertTrue(a.isLeftOf(new IntMock(5, 11, Bounded.OPEN)));
+		assertFalse(a.isLeftOf(new IntMock(5, 11, Bounded.CLOSED)));
+		assertTrue(a.isLeftOf(new IntMock(6, 8, Bounded.CLOSED)));
+		assertFalse(a.isLeftOf(new IntMock(4, 12, Bounded.CLOSED_RIGHT)));
+
+		a = new IntMock(5, Unbounded.OPEN_RIGHT);
+		assertFalse(a.isLeftOf(new IntMock(0, 5, Bounded.CLOSED)));
+		assertFalse(a.isLeftOf(new IntMock(0, 5, Bounded.OPEN)));
+		assertTrue(a.isLeftOf(new IntMock(5, 11, Bounded.OPEN)));
+		assertTrue(a.isLeftOf(new IntMock(5, 11, Bounded.CLOSED)));
+		assertTrue(a.isLeftOf(new IntMock(6, 8, Bounded.CLOSED)));
+		assertFalse(a.isLeftOf(new IntMock(4, 12, Bounded.CLOSED_RIGHT)));
 	}
 
 	@Test
@@ -473,6 +573,115 @@ public class IntervalTest {
 		assertFalse(a.isRightOf(new IntMock(6, 12, Bounded.CLOSED_RIGHT)));
 		assertFalse(a.isRightOf(new IntMock(1, 7, Bounded.CLOSED_LEFT)));
 		assertFalse(a.isRightOf(new IntMock(11, 14, Bounded.CLOSED)));
+	}
+
+	@Test
+	public void isRightOfUnboundedInterval(){
+		IntMock a = new IntMock(5, Unbounded.CLOSED_LEFT);
+		assertFalse(a.isRightOf(new IntMock(0, 5, Bounded.CLOSED)));
+		assertTrue(a.isRightOf(new IntMock(0, 5, Bounded.OPEN)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.CLOSED_LEFT)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.CLOSED_RIGHT)));
+		assertTrue(a.isRightOf(new IntMock(5, Unbounded.OPEN_RIGHT)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.OPEN_LEFT)));
+		assertFalse(a.isRightOf(new IntMock(5, 11, Bounded.OPEN)));
+		assertFalse(a.isRightOf(new IntMock(5, 11, Bounded.CLOSED)));
+		assertFalse(a.isRightOf(new IntMock(6, 8, Bounded.CLOSED)));
+		assertFalse(a.isRightOf(new IntMock(4, 12, Bounded.CLOSED_RIGHT)));
+		assertTrue(a.isRightOf(new IntMock(1, 3, Bounded.CLOSED_LEFT)));
+
+		a = new IntMock(5, Unbounded.OPEN_LEFT);
+		assertTrue(a.isRightOf(new IntMock(0, 5, Bounded.CLOSED)));
+		assertTrue(a.isRightOf(new IntMock(0, 5, Bounded.OPEN)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.CLOSED_LEFT)));
+		assertTrue(a.isRightOf(new IntMock(5, Unbounded.CLOSED_RIGHT)));
+		assertTrue(a.isRightOf(new IntMock(5, Unbounded.OPEN_RIGHT)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.OPEN_LEFT)));
+		assertFalse(a.isRightOf(new IntMock(5, 11, Bounded.OPEN)));
+		assertFalse(a.isRightOf(new IntMock(5, 11, Bounded.CLOSED)));
+		assertFalse(a.isRightOf(new IntMock(6, 8, Bounded.CLOSED)));
+		assertFalse(a.isRightOf(new IntMock(4, 12, Bounded.CLOSED_RIGHT)));
+		assertTrue(a.isRightOf(new IntMock(1, 3, Bounded.CLOSED_LEFT)));
+
+		a = new IntMock(5, Unbounded.CLOSED_RIGHT);
+		assertFalse(a.isRightOf(new IntMock(5, 8, Bounded.CLOSED)));
+		assertFalse(a.isRightOf(new IntMock(5, 8, Bounded.OPEN)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.CLOSED_LEFT)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.CLOSED_RIGHT)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.OPEN_RIGHT)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.OPEN_LEFT)));
+		assertFalse(a.isRightOf(new IntMock(0, 5, Bounded.OPEN)));
+		assertFalse(a.isRightOf(new IntMock(0, 5, Bounded.CLOSED)));
+		assertFalse(a.isRightOf(new IntMock(6, 8, Bounded.CLOSED)));
+		assertFalse(a.isRightOf(new IntMock(4, 12, Bounded.CLOSED_RIGHT)));
+		assertFalse(a.isRightOf(new IntMock(1, 3, Bounded.CLOSED_LEFT)));
+
+		a = new IntMock(5, Unbounded.OPEN_RIGHT);
+		assertFalse(a.isRightOf(new IntMock(5, 8, Bounded.CLOSED)));
+		assertFalse(a.isRightOf(new IntMock(5, 8, Bounded.OPEN)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.CLOSED_LEFT)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.CLOSED_RIGHT)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.OPEN_RIGHT)));
+		assertFalse(a.isRightOf(new IntMock(5, Unbounded.OPEN_LEFT)));
+		assertFalse(a.isRightOf(new IntMock(0, 5, Bounded.OPEN)));
+		assertFalse(a.isRightOf(new IntMock(0, 5, Bounded.CLOSED)));
+		assertFalse(a.isRightOf(new IntMock(6, 8, Bounded.CLOSED)));
+		assertFalse(a.isRightOf(new IntMock(4, 12, Bounded.CLOSED_RIGHT)));
+		assertFalse(a.isRightOf(new IntMock(1, 3, Bounded.CLOSED_LEFT)));
+	}
+
+	@Test
+	public void isRightOfDegenerate(){
+		IntMock a = new IntMock(5, Unbounded.CLOSED_LEFT);
+		assertFalse(a.isRightOf((Interval<Integer>)null));
+		assertFalse(a.isRightOf((Integer)null));
+		assertFalse(a.isRightOf(new IntMock()));
+		assertFalse(a.isRightOf(new IntMock(20, 10, Bounded.OPEN)));
+
+		a = new IntMock(5, Unbounded.CLOSED_RIGHT);
+		assertFalse(a.isRightOf((Interval<Integer>)null));
+		assertFalse(a.isRightOf((Integer)null));
+		assertFalse(a.isRightOf(new IntMock()));
+		assertFalse(a.isRightOf(new IntMock(20, 10, Bounded.OPEN)));
+
+		a = new IntMock(5, Unbounded.OPEN_LEFT);
+		assertFalse(a.isRightOf((Interval<Integer>)null));
+		assertFalse(a.isRightOf((Integer)null));
+		assertFalse(a.isRightOf(new IntMock()));
+		assertFalse(a.isRightOf(new IntMock(20, 10, Bounded.OPEN)));
+
+		a = new IntMock(5, Unbounded.OPEN_RIGHT);
+		assertFalse(a.isRightOf((Interval<Integer>)null));
+		assertFalse(a.isRightOf((Integer)null));
+		assertFalse(a.isRightOf(new IntMock()));
+		assertFalse(a.isRightOf(new IntMock(20, 10, Bounded.OPEN)));
+	}
+
+	@Test
+	public void isLeftOfDegenerate(){
+		IntMock a = new IntMock(5, Unbounded.CLOSED_LEFT);
+		assertFalse(a.isLeftOf((Interval<Integer>)null));
+		assertFalse(a.isLeftOf((Integer)null));
+		assertFalse(a.isLeftOf(new IntMock()));
+		assertFalse(a.isLeftOf(new IntMock(20, 10, Bounded.OPEN)));
+
+		a = new IntMock(5, Unbounded.CLOSED_RIGHT);
+		assertFalse(a.isLeftOf((Interval<Integer>)null));
+		assertFalse(a.isLeftOf((Integer)null));
+		assertFalse(a.isLeftOf(new IntMock()));
+		assertFalse(a.isLeftOf(new IntMock(20, 10, Bounded.OPEN)));
+
+		a = new IntMock(5, Unbounded.OPEN_LEFT);
+		assertFalse(a.isLeftOf((Interval<Integer>)null));
+		assertFalse(a.isLeftOf((Integer)null));
+		assertFalse(a.isLeftOf(new IntMock()));
+		assertFalse(a.isLeftOf(new IntMock(20, 10, Bounded.OPEN)));
+
+		a = new IntMock(5, Unbounded.OPEN_RIGHT);
+		assertFalse(a.isLeftOf((Interval<Integer>)null));
+		assertFalse(a.isLeftOf((Integer)null));
+		assertFalse(a.isLeftOf(new IntMock()));
+		assertFalse(a.isLeftOf(new IntMock(20, 10, Bounded.OPEN)));
 	}
 
 	@Test
@@ -507,6 +716,22 @@ public class IntervalTest {
 		assertFalse(a.isRightOf(6));
 		assertFalse(a.isRightOf(10));
 		assertFalse(a.isRightOf(12));
+	}
+
+	@Test
+	public void test_enum(){
+		assertEquals(Unbounded.CLOSED_LEFT, Unbounded.valueOf("CLOSED_LEFT"));
+		assertEquals(Unbounded.CLOSED_RIGHT, Unbounded.valueOf("CLOSED_RIGHT"));
+		assertEquals(Unbounded.OPEN_LEFT, Unbounded.valueOf("OPEN_LEFT"));
+		assertEquals(Unbounded.OPEN_RIGHT, Unbounded.valueOf("OPEN_RIGHT"));
+
+		assertEquals(Bounded.CLOSED, Bounded.valueOf("CLOSED"));
+		assertEquals(Bounded.OPEN, Bounded.valueOf("OPEN"));
+		assertEquals(Bounded.CLOSED_LEFT, Bounded.valueOf("CLOSED_LEFT"));
+		assertEquals(Bounded.CLOSED_RIGHT, Bounded.valueOf("CLOSED_RIGHT"));
+
+		assertEquals(new IntMock(1, 10, Bounded.CLOSED), new IntMock(1, 10, null));
+		assertEquals(new IntMock(1, Unbounded.CLOSED_RIGHT), new IntMock(1, null));
 	}
 
 	private static class IntMock extends Interval<Integer>{

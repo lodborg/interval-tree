@@ -171,6 +171,18 @@ public class IntervalTreeTest {
 	}
 
 	@Test
+	public void test_removeEmptyInterval(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval a = new IntegerInterval(1, 4, Bounded.OPEN);
+		tree.addInterval(a);
+		tree.removeInterval(new IntegerInterval(30, 20, Bounded.CLOSED));
+		assertEquals(1, tree.root.decreasing.size());
+		assertEquals(1, tree.root.increasing.size());
+		assertTrue(tree.root.decreasing.contains(a));
+		assertTrue(tree.root.increasing.contains(a));
+	}
+
+	@Test
 	public void test_removeNonExistingInterval(){
 		IntervalTree<Integer> tree = new IntervalTree<>();
 		Interval<Integer> a = new IntegerInterval(20, 30, Bounded.CLOSED);
@@ -189,6 +201,14 @@ public class IntervalTreeTest {
 		assertTrue(tree.root.right.increasing.contains(c));
 		assertTrue(tree.root.right.decreasing.contains(c));
 		assertEquals(1, tree.root.right.decreasing.size());
+
+		tree = new IntervalTree<>();
+		tree.addInterval(a);
+		tree.removeInterval(new IntegerInterval(10, 40, Bounded.OPEN));
+		assertTrue(tree.root.decreasing.contains(a));
+		assertTrue(tree.root.increasing.contains(a));
+		assertEquals(1, tree.root.increasing.size());
+		assertEquals(1, tree.root.decreasing.size());
 	}
 
 	@Test

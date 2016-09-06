@@ -29,6 +29,8 @@ public abstract class Interval<T extends Comparable<? super T>> {
 	public Interval(T start, T end, Bounded type){
 		this.start = start;
 		this.end = end;
+		if (type == null)
+			type = Bounded.CLOSED;
 		switch (type){
 			case OPEN:
 				break;
@@ -39,13 +41,15 @@ public abstract class Interval<T extends Comparable<? super T>> {
 			case CLOSED_RIGHT:
 				isEndInclusive = true;
 				break;
-			case CLOSED_LEFT:
+			default:
 				isStartInclusive = true;
 				break;
 		}
 	}
 
 	public Interval(T value, Unbounded type){
+		if (type == null)
+			type = Unbounded.CLOSED_RIGHT;
 		switch (type){
 			case OPEN_LEFT:
 				start = value;
@@ -62,7 +66,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
 				isStartInclusive = true;
 				isEndInclusive = false;
 				break;
-			case CLOSED_RIGHT:
+			default:
 				end = value;
 				isStartInclusive = true;
 				isEndInclusive = true;
@@ -114,24 +118,12 @@ public abstract class Interval<T extends Comparable<? super T>> {
 	}
 
 	public boolean contains(T query){
-		if (isEmpty()) {
+		if (isEmpty() || query == null) {
 			return false;
 		}
 
-		int startCompare;
-		if (start == null){
-			startCompare = query == null ? 0 : 1;
-		} else {
-			startCompare = query == null ? -1 : query.compareTo(start);
-		}
-
-		int endCompare;
-		if (end == null){
-			endCompare = query == null ? 0 : -1;
-		} else {
-			endCompare = query == null ? 1 : query.compareTo(end);
-		}
-
+		int startCompare = start == null ? 1 : query.compareTo(start);
+		int endCompare = end == null ? -1 : query.compareTo(end);
 		if (startCompare > 0 && endCompare < 0) {
 			return true;
 		}
@@ -199,7 +191,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
 		if (query == null)
 			return false;
 		Interval<T> intersection = getIntersection(query);
-		return intersection != null && !intersection.isEmpty();
+		return intersection != null;
 	}
 
 	public boolean isRightOf(T point, boolean inclusive){
@@ -216,6 +208,8 @@ public abstract class Interval<T extends Comparable<? super T>> {
 	}
 
 	public boolean isRightOf(Interval<T> other){
+		if (other == null || other.isEmpty())
+			return false;
 		return isRightOf(other.end, other.isEndInclusive());
 	}
 
@@ -233,6 +227,8 @@ public abstract class Interval<T extends Comparable<? super T>> {
 	}
 
 	public boolean isLeftOf(Interval<T> other){
+		if (other == null || other.isEmpty())
+			return false;
 		return isLeftOf(other.start, other.isStartInclusive());
 	}
 
@@ -329,7 +325,7 @@ public abstract class Interval<T extends Comparable<? super T>> {
 		if (obj == null || !(obj instanceof Interval))
 			return false;
 		Interval<T> other = (Interval<T>) obj;
-		return startComparator.compare(this, other) == 0 && endComparator.compare(this, other) == 0;
+		return startComparator.compare(this, other) == 0;
 	}
 
 	public Builder builder(){

@@ -1,12 +1,11 @@
 # Interval Tree
 
-[![Build Status](https://travis-ci.org/lodborg/interval-tree.svg?branch=master)](https://travis-ci.org/lodborg/interval-tree)
+[![Build Status](https://travis-ci.org/lodborg/interval-tree.svg?branch=master)](https://travis-ci.org/lodborg/interval-tree) [![codecov.io](https://codecov.io/github/lodborg/interval-tree/coverage.svg?branch=master)](https://codecov.io/gh/lodborg/interval-tree)
 
-Implementation of dynamic interval trees. Both concurrent and non-concurrent flavors are available.
+Implementation of dynamic interval trees.
 * Supports lookup for all intervals intersecting a query point in O(logn + k) worst-case time, where n is the amount of intervals stored in the tree and k is the amount of intervals returned by the lookup.
 * Insertions and deletions are in *average* O(logn) time and O(n) worst-case time.
 * Supports bounded and unbounded, as well as open and closed intervals.
-* In the thread-safe version, lookups are lock-free - they can't block or be blocked by any ongoing or incoming modifications.
 
 **_This README is still under construction. It will be updated soon._**
 
