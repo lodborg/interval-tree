@@ -31,10 +31,10 @@ public class DateIntervalTest {
 	@Test
 	public void test_middlepointUnbounded() {
 		assertEquals(new Date(0), new DateInterval().getMidpoint());
-		assertEquals(new Date(4611677853814364403L), new DateInterval(parse("10.07.1452 08:52:33"), Unbounded.CLOSED_LEFT).getMidpoint());
-		assertEquals(new Date(-4611694183040411404L), new DateInterval(parse("10.07.1452 08:52:33"), Unbounded.CLOSED_RIGHT).getMidpoint());
-		assertEquals(new Date(4611677853814364403L), new DateInterval(parse("10.07.1452 08:52:33"), Unbounded.OPEN_LEFT).getMidpoint());
-		assertEquals(new Date(-4611694183040411404L), new DateInterval(parse("10.07.1452 08:52:33"), Unbounded.OPEN_RIGHT).getMidpoint());
+		assertEquals(new Date(4611677853814364403L), new DateInterval(new Date(-16329226047000L), Unbounded.CLOSED_LEFT).getMidpoint());
+		assertEquals(new Date(-4611694183040411404L), new DateInterval(new Date(-16329226047000L), Unbounded.CLOSED_RIGHT).getMidpoint());
+		assertEquals(new Date(4611677853814364403L), new DateInterval(new Date(-16329226047000L), Unbounded.OPEN_LEFT).getMidpoint());
+		assertEquals(new Date(-4611694183040411404L), new DateInterval(new Date(-16329226047000L), Unbounded.OPEN_RIGHT).getMidpoint());
 	}
 
 	@Test
