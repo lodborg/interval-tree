@@ -2,29 +2,12 @@ package com.lodborg.intervaltree;
 
 import java.util.*;
 
-public class IntervalTree<T extends Comparable<? super T>> {
+public class IntervalTree<T extends Comparable<? super T>> implements Iterable<Interval<T>> {
 	TreeNode<T> root;
-	TreeMap<T, HashSet<Interval<T>>> endPointsMap = new TreeMap<>();
 
 	public void addInterval(Interval<T> interval){
 		if (interval.isEmpty())
 			return;
-		if (interval.getStart() != null) {
-			HashSet<Interval<T>> set = endPointsMap.get(interval.getStart());
-			if (set == null){
-				set = new HashSet<>();
-				endPointsMap.put(interval.getStart(), set);
-			}
-			set.add(interval);
-		}
-		if (interval.getEnd() != null) {
-			HashSet<Interval<T>> set = endPointsMap.get(interval.getEnd());
-			if (set == null){
-				set = new HashSet<>();
-				endPointsMap.put(interval.getEnd(), set);
-			}
-			set.add(interval);
-		}
 		root = TreeNode.addInterval(root, interval);
 	}
 
@@ -34,41 +17,50 @@ public class IntervalTree<T extends Comparable<? super T>> {
 
 	public Set<Interval<T>> query(Interval<T> interval){
 		Set<Interval<T>> result = new HashSet<>();
-		Set<Map.Entry<T, HashSet<Interval<T>>>> entries = endPointsMap.subMap(
-				interval.getStart(),
-				interval.isStartInclusive(),
-				interval.getEnd(),
-				interval.isEndInclusive()
-		).entrySet();
 
-		for (Map.Entry<T, HashSet<Interval<T>>> entry: entries){
-			for (Interval<T> next: entry.getValue()){
-				if (next.intersects(interval))
+		if (root == null || interval.isEmpty())
+			return result;
+		TreeNode<T> node = root;
+		while (node != null){
+			if (interval.contains(node.midpoint)){
+				result.addAll(node.increasing);
+				TreeNode.rangeQueryLeft(node.left, interval, result);
+				TreeNode.rangeQueryRight(node.right, interval, result);
+				break;
+			}
+			if (interval.isLeftOf(node.midpoint)) {
+				for (Interval<T> next: node.increasing){
+					if (!interval.intersects(next))
+						break;
 					result.add(next);
+				}
+				node = node.left;
+			}
+			else {
+				for (Interval<T> next: node.decreasing){
+					if (!interval.intersects(next))
+						break;
+					result.add(next);
+				}
+				node = node.right;
 			}
 		}
-		return TreeNode.query(root, interval.getMidpoint(), result);
+		return result;
 	}
 
 	public void removeInterval(Interval<T> interval){
 		if (interval.isEmpty() || root == null)
 			return;
-		if (interval.getStart() != null){
-			HashSet<Interval<T>> set = endPointsMap.get(interval.getStart());
-			if (set != null) {
-				set.remove(interval);
-				if (set.isEmpty())
-					endPointsMap.remove(interval.getStart());
-			}
-		}
-		if (interval.getEnd() != null){
-			HashSet<Interval<T>> set = endPointsMap.get(interval.getEnd());
-			if (set != null) {
-				set.remove(interval);
-				if (set.isEmpty())
-					endPointsMap.remove(interval.getEnd());
-			}
-		}
 		root = TreeNode.removeInterval(root, interval);
+	}
+
+	@Override
+	public Iterator<Interval<T>> iterator() {
+		if (root == null){
+			return Collections.emptyIterator();
+		}
+		else {
+			return root.iterator();
+		}
 	}
 }

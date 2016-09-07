@@ -6,6 +6,7 @@ import com.lodborg.intervaltree.Interval.*;
 
 import java.util.*;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
 public class IntervalTreeTest {
@@ -310,33 +311,6 @@ public class IntervalTreeTest {
 	}
 
 	@Test
-	public void test_preventMemoryLeakInTreeMapAfterRemove(){
-		IntervalTree<Integer> tree = new IntervalTree<>();
-		IntegerInterval a = new IntegerInterval(1, 5, Bounded.CLOSED);
-		IntegerInterval b = new IntegerInterval(7, 20, Bounded.CLOSED_RIGHT);
-		IntegerInterval c = new IntegerInterval(5, 18, Bounded.CLOSED_LEFT);
-		IntegerInterval d = new IntegerInterval(20, 23, Bounded.CLOSED_LEFT);
-
-		tree.addInterval(a);
-		tree.addInterval(b);
-		tree.addInterval(c);
-		tree.addInterval(d);
-		tree.removeInterval(a);
-		tree.removeInterval(d);
-		tree.removeInterval(new IntegerInterval(128, 200, Bounded.CLOSED));
-
-		assertNull(tree.endPointsMap.get(1));
-		assertNotNull(tree.endPointsMap.get(5));
-		assertTrue(tree.endPointsMap.get(5).contains(c));
-		assertEquals(1, tree.endPointsMap.get(5).size());
-
-		assertNull(tree.endPointsMap.get(23));
-		assertNotNull(tree.endPointsMap.get(20));
-		assertTrue(tree.endPointsMap.get(20).contains(b));
-		assertEquals(1, tree.endPointsMap.get(20).size());
-	}
-
-	@Test
 	public void test_queryIntervalWithNewEndPoints(){
 		IntervalTree<Integer> tree = new IntervalTree<>();
 		IntegerInterval a = new IntegerInterval(1, 5, Bounded.CLOSED);
@@ -426,6 +400,134 @@ public class IntervalTreeTest {
 		assertEquals(1, tree.query(new IntegerInterval(-8, 1, Bounded.CLOSED)).size());
 		assertEquals(0, tree.query(new IntegerInterval(-8, 1, Bounded.CLOSED_LEFT)).size());
 		assertEquals(1, tree.query(new IntegerInterval(-8, 1, Bounded.CLOSED_RIGHT)).size());
+	}
+
+	@Test
+	public void test_rangeQueryToRightIntersectsMoreThanTwoMidpoints(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer>[] arr = new IntegerInterval[]{
+				new IntegerInterval(6, 10, Bounded.OPEN),
+				new IntegerInterval(-5, 0, Bounded.CLOSED),
+				new IntegerInterval(40, 100, Bounded.CLOSED),
+				new IntegerInterval(190, 300, Bounded.CLOSED)
+		};
+		for (Interval<Integer> interval: arr)
+			tree.addInterval(interval);
+		Set<Interval<Integer>> expected = new HashSet<>(Arrays.asList(arr[0], arr[2]));
+		Interval<Integer> query = new IntegerInterval(7, 170, Bounded.CLOSED_LEFT);
+		assertThat(new HashSet<>(tree.query(query)), is(new HashSet<>(expected)));
+	}
+
+	/**
+	 * Left branch of a range query, root of subtree contains no valid results,
+	 * right grandchild has some though.
+	 */
+	@Test
+	public void test_rangeQueryLeftWithOnlyRightGrandchildContainingValidResults(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer>[] arr = new IntegerInterval[]{
+				new IntegerInterval(6, 10, Bounded.OPEN),
+				new IntegerInterval(-5, 0, Bounded.CLOSED),
+				new IntegerInterval(40, 100, Bounded.CLOSED),
+				new IntegerInterval(1, 4, Bounded.CLOSED)
+		};
+		for (Interval<Integer> interval: arr)
+			tree.addInterval(interval);
+		Set<Interval<Integer>> expected = new HashSet<>(Arrays.asList(arr[0], arr[3]));
+		Interval<Integer> query = new IntegerInterval(3, 8, Bounded.CLOSED);
+		assertThat(new HashSet<>(tree.query(query)), is(new HashSet<>(expected)));
+	}
+
+	/**
+	 * Left branch of a range query, root of subtree contains valid results and has
+	 * a right child.
+	 */
+	@Test
+	public void test_rangeQueryLeftWithRootOfSubtreeAndRightGrandchildContainingResults(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer>[] arr = new IntegerInterval[]{
+				new IntegerInterval(6, 10, Bounded.OPEN),
+				new IntegerInterval(12, 30, Bounded.CLOSED),
+				new IntegerInterval(-100, -50, Bounded.CLOSED),
+				new IntegerInterval(-1, 4, Bounded.CLOSED)
+		};
+		for (Interval<Integer> interval: arr)
+			tree.addInterval(interval);
+		Set<Interval<Integer>> expected = new HashSet<>(Arrays.asList(arr[0], arr[2], arr[3]));
+		Interval<Integer> query = new IntegerInterval(-80, 9, Bounded.CLOSED_LEFT);
+		assertThat(new HashSet<>(tree.query(query)), is(new HashSet<>(expected)));
+	}
+
+	/**
+	 * Left branch of a range query, root of subtree contains valid results and has
+	 * a right child. The middlepoint of the root of left tree is not within the query.
+	 */
+	@Test
+	public void test_rangeQueryLeftSubtreeMidpointNotInQuery(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer>[] arr = new IntegerInterval[]{
+				new IntegerInterval(6, 10, Bounded.OPEN),
+				new IntegerInterval(12, 30, Bounded.CLOSED),
+				new IntegerInterval(-100, -50, Bounded.CLOSED),
+				new IntegerInterval(-1, 4, Bounded.CLOSED)
+		};
+		for (Interval<Integer> interval: arr)
+			tree.addInterval(interval);
+		Set<Interval<Integer>> expected = new HashSet<>(Arrays.asList(arr[0], arr[2], arr[3]));
+		Interval<Integer> query = new IntegerInterval(-70, 9, Bounded.CLOSED_LEFT);
+		assertThat(new HashSet<>(tree.query(query)), is(new HashSet<>(expected)));
+	}
+
+	/**
+	 * Right branch of a range query, root of subtree contains no valid results,
+	 * left grandchild has some though.
+	 */
+	@Test
+	public void test_rangeQueryRightWithOnlyLeftGrandchildContainingValidResults(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer>[] arr = new IntegerInterval[]{
+				new IntegerInterval(6, 10, Bounded.OPEN),
+				new IntegerInterval(-5, 0, Bounded.CLOSED),
+				new IntegerInterval(40, 100, Bounded.CLOSED),
+				new IntegerInterval(20, 30, Bounded.CLOSED)
+		};
+		for (Interval<Integer> interval: arr)
+			tree.addInterval(interval);
+		Set<Interval<Integer>> expected = new HashSet<>(Arrays.asList(arr[0], arr[3]));
+		Interval<Integer> query = new IntegerInterval(7, 22, Bounded.CLOSED_LEFT);
+		assertThat(new HashSet<>(tree.query(query)), is(new HashSet<>(expected)));
+	}
+
+	/**
+	 * Right branch of a range query, root of subtree contains valid results and has
+	 * a left child.
+	 */
+	@Test
+	public void test_rangeQueryRightWithRootOfSubtreeAndLeftGrandchildContainingResults(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer>[] arr = new IntegerInterval[]{
+				new IntegerInterval(6, 10, Bounded.OPEN),
+				new IntegerInterval(-5, 0, Bounded.CLOSED),
+				new IntegerInterval(40, 100, Bounded.CLOSED),
+				new IntegerInterval(20, 30, Bounded.CLOSED)
+		};
+		for (Interval<Integer> interval: arr)
+			tree.addInterval(interval);
+		Set<Interval<Integer>> expected = new HashSet<>(Arrays.asList(arr[0], arr[2], arr[3]));
+		Interval<Integer> query = new IntegerInterval(7, 75, Bounded.CLOSED_LEFT);
+		assertThat(new HashSet<>(tree.query(query)), is(new HashSet<>(expected)));
+	}
+
+	@Test
+	public void test_rangeQueryEmptyResult(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		assertTrue(tree.query(new IntegerInterval()).isEmpty());
+		tree.addInterval(new IntegerInterval(6, 10, Bounded.OPEN));
+		tree.addInterval(new IntegerInterval(-5, 0, Bounded.CLOSED));
+		tree.addInterval(new IntegerInterval(40, 100, Bounded.CLOSED));
+		tree.addInterval(new IntegerInterval(20, 30, Bounded.CLOSED));
+		assertTrue(tree.query(new IntegerInterval(35, 39, Bounded.CLOSED)).isEmpty());
+		assertTrue(tree.query(new IntegerInterval(80, 25, Bounded.CLOSED)).isEmpty());
 	}
 
 	@Test

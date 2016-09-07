@@ -2,7 +2,7 @@ package com.lodborg.intervaltree;
 
 import java.util.*;
 
-public class TreeNode<T extends Comparable<? super T>> {
+public class TreeNode<T extends Comparable<? super T>> implements Iterable<Interval<T>>{
 	protected NavigableSet<Interval<T>> decreasing, increasing;
 	protected volatile TreeNode<T> left, right;
 	protected T midpoint;
@@ -182,5 +182,114 @@ public class TreeNode<T extends Comparable<? super T>> {
 			}
 			return newRoot.balanceOut();
 		}
+	}
+
+	/**
+	 * A helper method for the range search used in the interval intersection query in the tree.
+	 * This corresponds to the left branch of the range search, once we find a node, whose
+	 * midpoint is contained in the query interval. All intervals in the left subtree of that node
+	 * are guaranteed to intersect with the query, if they have an endpoint greater or equal than
+	 * the start of the query interval. Basically, this means that every time we branch to the left
+	 * in the binary search, we need to add the whole right subtree to the result set.
+	 *
+	 * @param node    The left child of the node, whose midpoint is contained in the query interval.
+	 * @param query   The query interval.
+	 * @param result  The set which stores all intervals in the tree, intersecting the query.
+	 */
+	static <T extends Comparable<? super T>> void rangeQueryLeft(TreeNode<T> node, Interval<T> query, Set<Interval<T>> result) {
+		while (node != null) {
+			if (query.contains(node.midpoint)) {
+				result.addAll(node.increasing);
+				if (node.right != null) {
+					for (Interval<T> next : node.right)
+						result.add(next);
+				}
+				node = node.left;
+			} else {
+				for (Interval<T> next: node.decreasing){
+					if (next.isLeftOf(query))
+						break;
+					result.add(next);
+				}
+				node = node.right;
+			}
+		}
+	}
+
+	/**
+	 * A helper method for the range search used in the interval intersection query in the tree.
+	 * This corresponds to the right branch of the range search, once we find a node, whose
+	 * midpoint is contained in the query interval. All intervals in the right subtree of that node
+	 * are guaranteed to intersect with the query, if they have an endpoint smaller or equal than
+	 * the end of the query interval. Basically, this means that every time we branch to the right
+	 * in the binary search, we need to add the whole left subtree to the result set.
+	 *
+	 * @param node    The right child of the node, whose midpoint is contained in the query interval.
+	 * @param query   The query interval.
+	 * @param result  The set which stores all intervals in the tree, intersecting the query.
+	 */
+	static <T extends Comparable<? super T>> void rangeQueryRight(TreeNode<T> node, Interval<T> query, Set<Interval<T>> result) {
+		while (node != null) {
+			if (query.contains(node.midpoint)) {
+				result.addAll(node.increasing);
+				if (node.left != null) {
+					for (Interval<T> next : node.left)
+						result.add(next);
+				}
+				node = node.right;
+			} else {
+				for (Interval<T> next: node.increasing){
+					if (next.isRightOf(query))
+						break;
+					result.add(next);
+				}
+				node = node.left;
+			}
+		}
+	}
+
+
+	/**
+	 * An iterator over all intervals stored in the tree. Traversal is done via classic
+	 * iterative in-order tree traversal where each iteration is in amortized O(1) time.
+	 * The iterator requires O(logn) space - at each point of the traversal we keep a
+	 * stack of the currently traversed branch of the tree.
+	 */
+	@Override
+	public Iterator<Interval<T>> iterator() {
+		return new Iterator<Interval<T>>() {
+			Stack<TreeNode<T>> stack = new Stack<>();
+			TreeNode<T> subtreeRoot = TreeNode.this;
+			TreeNode<T> currentNode;
+			Interval<T> currentInterval;
+			Iterator<Interval<T>> iterator = Collections.emptyIterator();
+
+			@Override
+			public boolean hasNext() {
+				return subtreeRoot != null || !stack.isEmpty() || iterator.hasNext();
+			}
+
+			@Override
+			public Interval<T> next() {
+				if (!iterator.hasNext()) {
+					while (subtreeRoot != null) {
+						stack.push(subtreeRoot);
+						subtreeRoot = subtreeRoot.left;
+					}
+					if (stack.isEmpty())
+						throw new NoSuchElementException();
+					currentNode = stack.pop();
+					iterator = currentNode.increasing.iterator();
+					subtreeRoot = currentNode.right;
+				}
+				currentInterval = iterator.next();
+				return currentInterval;
+			}
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+		};
 	}
 }
