@@ -81,7 +81,7 @@ public class RandomizedTest {
 	}
 
 	private void print(Interval<Integer> inter){
-		System.out.print("tree.addInterval(new IntegerInterval().create("+(inter.getStart() == null ? "null" : inter.getStart()));
+		System.out.print("tree.add(new IntegerInterval().create("+(inter.getStart() == null ? "null" : inter.getStart()));
 		System.out.println(", "+inter.isStartInclusive()+", "+(inter.getEnd() == null ? "null" : inter.getEnd())+", "+inter.isEndInclusive()+"));");
 	}
 
@@ -111,7 +111,7 @@ public class RandomizedTest {
 				list.add(next);
 				out.listCreationTime += System.currentTimeMillis() - time;
 				time = System.currentTimeMillis();
-				tree.addInterval(next);
+				tree.add(next);
 				out.treeCreationTime += System.currentTimeMillis() - time;
 			}
 

@@ -63,11 +63,11 @@ public class DateIntervalTest {
 		DateInterval dd = new DateInterval(a, d, Bounded.OPEN);
 		DateInterval ee = new DateInterval(e, g, Bounded.CLOSED_LEFT);
 
-		tree.addInterval(aa);
-		tree.addInterval(bb);
-		tree.addInterval(cc);
-		tree.addInterval(dd);
-		tree.addInterval(ee);
+		tree.add(aa);
+		tree.add(bb);
+		tree.add(cc);
+		tree.add(dd);
+		tree.add(ee);
 
 		Set<Interval<Date>> res = tree.query(new DateInterval(c, d, Bounded.OPEN));
 		assertEquals(3, res.size());

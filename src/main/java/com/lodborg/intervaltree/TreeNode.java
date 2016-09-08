@@ -2,11 +2,11 @@ package com.lodborg.intervaltree;
 
 import java.util.*;
 
-public class TreeNode<T extends Comparable<? super T>> implements Iterable<Interval<T>>{
+public class TreeNode<T extends Comparable<? super T>> implements Iterable<Interval<T>> {
 	protected NavigableSet<Interval<T>> decreasing, increasing;
 	protected volatile TreeNode<T> left, right;
 	protected T midpoint;
-	protected volatile int height;
+	protected int height;
 
 	public TreeNode(Interval<T> interval){
 		decreasing = new TreeSet<>(Interval.endComparator);
@@ -18,18 +18,21 @@ public class TreeNode<T extends Comparable<? super T>> implements Iterable<Inter
 		height = 1;
 	}
 
-	public static <T extends Comparable<? super T>> TreeNode<T> addInterval(TreeNode<T> root, Interval<T> interval) {
-		if (root == null)
+	public static <T extends Comparable<? super T>> TreeNode<T> addInterval(IntervalTree<T> tree, TreeNode<T> root, Interval<T> interval) {
+		if (root == null) {
+			tree.size++;
 			return new TreeNode<>(interval);
+		}
 		if (interval.contains(root.midpoint)){
-			root.decreasing.add(interval);
+			if (root.decreasing.add(interval))
+				tree.size++;
 			root.increasing.add(interval);
 			return root;
 		} else if (interval.isLeftOf(root.midpoint)){
-			root.left = addInterval(root.left, interval);
+			root.left = addInterval(tree, root.left, interval);
 			root.height = Math.max(height(root.left), height(root.right))+1;
 		} else {
-			root.right = addInterval(root.right, interval);
+			root.right = addInterval(tree, root.right, interval);
 			root.height = Math.max(height(root.left), height(root.right))+1;
 		}
 
@@ -132,20 +135,21 @@ public class TreeNode<T extends Comparable<? super T>> implements Iterable<Inter
 		}
 	}
 
-	public static <T extends Comparable<? super T>> TreeNode<T> removeInterval(TreeNode<T> root, Interval<T> interval) {
+	public static <T extends Comparable<? super T>> TreeNode<T> removeInterval(IntervalTree<T> tree, TreeNode<T> root, Interval<T> interval) {
 		if (root == null)
 			return null;
 		if (interval.contains(root.midpoint)){
-			root.decreasing.remove(interval);
+			if (root.decreasing.remove(interval))
+				tree.size--;
 			root.increasing.remove(interval);
 			if (root.increasing.size() == 0){
 				return deleteNode(root);
 			}
 
 		} else if (interval.isLeftOf(root.midpoint)){
-			root.left = removeInterval(root.left, interval);
+			root.left = removeInterval(tree, root.left, interval);
 		} else {
-			root.right = removeInterval(root.right, interval);
+			root.right = removeInterval(tree, root.right, interval);
 		}
 		return root.balanceOut();
 	}

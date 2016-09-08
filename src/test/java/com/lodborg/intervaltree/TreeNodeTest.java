@@ -1,6 +1,5 @@
 package com.lodborg.intervaltree;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -27,7 +26,7 @@ public class TreeNodeTest {
 				new IntegerInterval(0, 4, Bounded.OPEN)
 		};
 		for (Interval<Integer> interval: arr)
-			tree.addInterval(interval);
+			tree.add(interval);
 		List<Interval<Integer>> list = new ArrayList<>();
 		for (Interval<Integer> interval: tree)
 			list.add(interval);
@@ -40,7 +39,7 @@ public class TreeNodeTest {
 	public void test_iteratorEmpty(){
 		IntervalTree<Integer> tree = new IntervalTree<>();
 		assertFalse(tree.iterator().hasNext());
-		tree.addInterval(new IntegerInterval(1, 3, Bounded.CLOSED));
+		tree.add(new IntegerInterval(1, 3, Bounded.CLOSED));
 		Iterator<Interval<Integer>> it = tree.iterator();
 		it.next();
 		assertFalse(it.hasNext());
@@ -61,7 +60,7 @@ public class TreeNodeTest {
 				new IntegerInterval(0, 10, Bounded.CLOSED_RIGHT)
 		)));
 		for (Interval<Integer> next: set)
-			tree.addInterval(next);
+			tree.add(next);
 		Set<Interval<Integer>> result = new HashSet<>();
 		for (Interval<Integer> next: tree)
 			result.add(next);
@@ -74,9 +73,9 @@ public class TreeNodeTest {
 		Interval<Integer> target = new IntegerInterval(12, 22, Bounded.CLOSED_RIGHT);
 		Interval<Integer> root = new IntegerInterval(2, 10, Bounded.CLOSED_LEFT);
 		Interval<Integer> left = new IntegerInterval(1, 5, Bounded.OPEN);
-		tree.addInterval(root);
-		tree.addInterval(target);
-		tree.addInterval(left);
+		tree.add(root);
+		tree.add(target);
+		tree.add(left);
 		Iterator<Interval<Integer>> it = tree.iterator();
 		while (it.hasNext()){
 			Interval<Integer> next = it.next();
@@ -100,10 +99,10 @@ public class TreeNodeTest {
 		Interval<Integer> root = new IntegerInterval(2, 10, Bounded.CLOSED_LEFT);
 		Interval<Integer> left = new IntegerInterval(1, 5, Bounded.OPEN);
 		Interval<Integer> leftGrandchild = new IntegerInterval(-10, 0, Bounded.OPEN);
-		tree.addInterval(root);
-		tree.addInterval(target);
-		tree.addInterval(left);
-		tree.addInterval(leftGrandchild);
+		tree.add(root);
+		tree.add(target);
+		tree.add(left);
+		tree.add(leftGrandchild);
 		TreeNode<Integer> newRoot = tree.root.left;
 
 		Iterator<Interval<Integer>> it = tree.iterator();
@@ -135,8 +134,8 @@ public class TreeNodeTest {
 		};
 		IntegerInterval target = new IntegerInterval(-4, 18, Bounded.CLOSED);
 		for (Interval<Integer> next: arr)
-			tree.addInterval(next);
-		tree.addInterval(target);
+			tree.add(next);
+		tree.add(target);
 
 		TreeNode<Integer> root = tree.root;
 		TreeNode<Integer> left = root.left;
@@ -179,7 +178,7 @@ public class TreeNodeTest {
 
 		};
 		for (IntegerInterval next: arr)
-			tree.addInterval(next);
+			tree.add(next);
 		Iterator<Interval<Integer>> it = tree.iterator();
 		List<Interval<Integer>> list = new ArrayList<>();
 		while(it.hasNext()){
@@ -216,7 +215,7 @@ public class TreeNodeTest {
 
 		};
 		for (IntegerInterval next: arr)
-			tree.addInterval(next);
+			tree.add(next);
 		Iterator<Interval<Integer>> it = tree.iterator();
 		List<Interval<Integer>> list = new ArrayList<>();
 		while(it.hasNext()){

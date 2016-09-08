@@ -3,13 +3,17 @@ package com.lodborg.intervaltree;
 import java.util.*;
 import com.lodborg.intervaltree.TreeNode.*;
 
-public class IntervalTree<T extends Comparable<? super T>> implements Iterable<Interval<T>> {
+public class IntervalTree<T extends Comparable<? super T>> extends AbstractSet<Interval<T>> {
 	TreeNode<T> root;
+	int size;
 
-	public void addInterval(Interval<T> interval){
+	@Override
+	public boolean add(Interval<T> interval){
 		if (interval.isEmpty())
-			return;
-		root = TreeNode.addInterval(root, interval);
+			return false;
+		int sizeBeforeOperation = size;
+		root = TreeNode.addInterval(this, root, interval);
+		return size == sizeBeforeOperation;
 	}
 
 	public Set<Interval<T>> query(T point){
@@ -49,11 +53,20 @@ public class IntervalTree<T extends Comparable<? super T>> implements Iterable<I
 		return result;
 	}
 
-	public void removeInterval(Interval<T> interval){
+	public boolean remove(Interval<T> interval){
 		if (interval.isEmpty() || root == null)
-			return;
-		root = TreeNode.removeInterval(root, interval);
+			return false;
+		int sizeBeforeOperation = size;
+		root = TreeNode.removeInterval(this, root, interval);
+		return size == sizeBeforeOperation;
 	}
+
+
+
+
+	// =========================================================================
+	// ============== Iterator over the Intervals in the tree ==================
+	// =========================================================================
 
 	@Override
 	public Iterator<Interval<T>> iterator() {
@@ -66,7 +79,7 @@ public class IntervalTree<T extends Comparable<? super T>> implements Iterable<I
 				@Override
 				public void remove() {
 					if (it.currentNode.increasing.size() == 1){
-						root = TreeNode.removeInterval(root, it.currentInterval);
+						root = TreeNode.removeInterval(IntervalTree.this, root, it.currentInterval);
 
 						// Rebuild the whole branch stack in the iterator, because we might
 						// have moved nodes around and introduced new nodes. The rule is,
@@ -105,5 +118,46 @@ public class IntervalTree<T extends Comparable<? super T>> implements Iterable<I
 				}
 			};
 		}
+	}
+
+
+
+
+
+	// =========================================================================
+	// ================== Methods from the Set interface =======================
+	// =========================================================================
+
+	public int size(){
+		return size;
+	}
+
+	@Override
+	public void clear() {
+		size = 0;
+		root = null;
+	}
+
+	@Override
+	public boolean contains(Object o) {
+		if (root == null || o == null)
+			return false;
+		if (!(o instanceof Interval))
+			return false;
+		Interval<T> query;
+		query = (Interval<T>)o;
+		TreeNode<T> node = root;
+		while (node != null){
+			if (query.contains(node.midpoint)){
+				return node.increasing.contains(query);
+			}
+			if (query.isLeftOf(node.midpoint)){
+				node = node.left;
+			} else {
+				node = node.right;
+			}
+		}
+
+		return false;
 	}
 }
