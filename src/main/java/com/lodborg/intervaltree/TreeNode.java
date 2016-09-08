@@ -256,40 +256,42 @@ public class TreeNode<T extends Comparable<? super T>> implements Iterable<Inter
 	 * stack of the currently traversed branch of the tree.
 	 */
 	@Override
-	public Iterator<Interval<T>> iterator() {
-		return new Iterator<Interval<T>>() {
-			Stack<TreeNode<T>> stack = new Stack<>();
-			TreeNode<T> subtreeRoot = TreeNode.this;
-			TreeNode<T> currentNode;
-			Interval<T> currentInterval;
-			Iterator<Interval<T>> iterator = Collections.emptyIterator();
+	public TreeNodeIterator iterator() {
+		return new TreeNodeIterator();
+	}
 
-			@Override
-			public boolean hasNext() {
-				return subtreeRoot != null || !stack.isEmpty() || iterator.hasNext();
-			}
+	class TreeNodeIterator implements Iterator<Interval<T>>{
+		Stack<TreeNode<T>> stack = new Stack<>();
+		TreeNode<T> subtreeRoot = TreeNode.this;
+		TreeNode<T> currentNode;
+		Interval<T> currentInterval;
+		Iterator<Interval<T>> iterator = Collections.emptyIterator();
 
-			@Override
-			public Interval<T> next() {
-				if (!iterator.hasNext()) {
-					while (subtreeRoot != null) {
-						stack.push(subtreeRoot);
-						subtreeRoot = subtreeRoot.left;
-					}
-					if (stack.isEmpty())
-						throw new NoSuchElementException();
-					currentNode = stack.pop();
-					iterator = currentNode.increasing.iterator();
-					subtreeRoot = currentNode.right;
+		@Override
+		public boolean hasNext() {
+			return subtreeRoot != null || !stack.isEmpty() || iterator.hasNext();
+		}
+
+		@Override
+		public Interval<T> next() {
+			if (!iterator.hasNext()) {
+				while (subtreeRoot != null) {
+					stack.push(subtreeRoot);
+					subtreeRoot = subtreeRoot.left;
 				}
-				currentInterval = iterator.next();
-				return currentInterval;
+				if (stack.isEmpty())
+					throw new NoSuchElementException();
+				currentNode = stack.pop();
+				iterator = currentNode.increasing.iterator();
+				subtreeRoot = currentNode.right;
 			}
+			currentInterval = iterator.next();
+			return currentInterval;
+		}
 
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException();
-			}
-		};
+		@Override
+		public void remove() {
+			iterator.remove();
+		}
 	}
 }

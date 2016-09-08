@@ -68,21 +68,171 @@ public class TreeNodeTest {
 		assertThat(set, is(result));
 	}
 
-	@Ignore @Test
+	@Test
 	public void test_iteratorRemove(){
 		IntervalTree<Integer> tree = new IntervalTree<>();
 		Interval<Integer> target = new IntegerInterval(12, 22, Bounded.CLOSED_RIGHT);
-		tree.addInterval(new IntegerInterval(2, 10, Bounded.CLOSED_LEFT));
+		Interval<Integer> root = new IntegerInterval(2, 10, Bounded.CLOSED_LEFT);
+		Interval<Integer> left = new IntegerInterval(1, 5, Bounded.OPEN);
+		tree.addInterval(root);
 		tree.addInterval(target);
-		tree.addInterval(new IntegerInterval(1, 5, Bounded.OPEN));
-		Iterator<Interval<Integer>> it = tree.root.iterator();
+		tree.addInterval(left);
+		Iterator<Interval<Integer>> it = tree.iterator();
 		while (it.hasNext()){
 			Interval<Integer> next = it.next();
 			if (next == target)
 				it.remove();
 		}
-		it = tree.root.iterator();
-		while (it.hasNext())
-			assertNotEquals(it.next(), target);
+
+		List<Interval<Integer>> list = new ArrayList<>();
+		for (Interval<Integer> next: tree)
+			list.add(next);
+
+		assertTrue(list.contains(root));
+		assertTrue(list.contains(left));
+		assertFalse(list.contains(target));
+	}
+
+	@Test
+	public void test_iteratorRemoveChangesTheRoot(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		Interval<Integer> target = new IntegerInterval(12, 22, Bounded.CLOSED_RIGHT);
+		Interval<Integer> root = new IntegerInterval(2, 10, Bounded.CLOSED_LEFT);
+		Interval<Integer> left = new IntegerInterval(1, 5, Bounded.OPEN);
+		Interval<Integer> leftGrandchild = new IntegerInterval(-10, 0, Bounded.OPEN);
+		tree.addInterval(root);
+		tree.addInterval(target);
+		tree.addInterval(left);
+		tree.addInterval(leftGrandchild);
+		TreeNode<Integer> newRoot = tree.root.left;
+
+		Iterator<Interval<Integer>> it = tree.iterator();
+		while (it.hasNext()){
+			Interval<Integer> next = it.next();
+			if (next == target)
+				it.remove();
+		}
+
+		List<Interval<Integer>> list = new ArrayList<>();
+		for (Interval<Integer> next: tree)
+			list.add(next);
+
+		assertTrue(list.contains(root));
+		assertTrue(list.contains(left));
+		assertTrue(list.contains(leftGrandchild));
+		assertFalse(list.contains(target));
+
+		assertEquals(newRoot, tree.root);
+	}
+
+	@Test
+	public void test_iteratorRemoveIntervalWithoutDeletingNode(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval[] arr = new IntegerInterval[]{
+				new IntegerInterval(20, 30, Bounded.CLOSED_LEFT),
+				new IntegerInterval(0, 10, Bounded.CLOSED_RIGHT),
+				new IntegerInterval(30, 40, Bounded.OPEN)
+		};
+		IntegerInterval target = new IntegerInterval(-4, 18, Bounded.CLOSED);
+		for (Interval<Integer> next: arr)
+			tree.addInterval(next);
+		tree.addInterval(target);
+
+		TreeNode<Integer> root = tree.root;
+		TreeNode<Integer> left = root.left;
+		TreeNode<Integer> right = root.right;
+
+		Iterator<Interval<Integer>> it = tree.iterator();
+		while(it.hasNext()){
+			Interval<Integer> next = it.next();
+			if (next == target)
+				it.remove();
+		}
+
+		assertEquals(tree.root, root);
+		assertEquals(tree.root.left, left);
+		assertEquals(tree.root.right, right);
+
+		List<Interval<Integer>> list = new ArrayList<>();
+		for (Interval<Integer> next: tree){
+			list.add(next);
+		}
+
+		for (Interval<Integer> next: arr)
+			assertTrue(list.contains(next));
+		assertFalse(list.contains(target));
+	}
+
+	@Test
+	public void test_iteratorRemoveDeletesInnerNode(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval target = new IntegerInterval(40, 50, Bounded.OPEN);
+		IntegerInterval[] arr = new IntegerInterval[]{
+				new IntegerInterval(100, 110, Bounded.CLOSED_LEFT),
+				new IntegerInterval(150, 160, Bounded.CLOSED_LEFT),
+				new IntegerInterval(50, 60, Bounded.CLOSED_RIGHT),
+				new IntegerInterval(160, 170, Bounded.CLOSED_LEFT),
+				new IntegerInterval(60, 70, Bounded.OPEN),
+				target,
+				new IntegerInterval(70, 80, Bounded.OPEN),
+				new IntegerInterval(140, 150, Bounded.CLOSED_LEFT),
+
+		};
+		for (IntegerInterval next: arr)
+			tree.addInterval(next);
+		Iterator<Interval<Integer>> it = tree.iterator();
+		List<Interval<Integer>> list = new ArrayList<>();
+		while(it.hasNext()){
+			Interval<Integer> next = it.next();
+			if (next == target)
+				it.remove();
+			else
+				list.add(next);
+		}
+
+		assertEquals(arr.length-1, list.size());
+		for (Interval<Integer> next: arr){
+			if (target == next)
+				assertFalse(list.contains(next));
+			else
+				assertTrue(list.contains(next));
+		}
+	}
+
+	@Test
+	public void test_iteratorRemoveDeletesInnerNodeAndPromotesTheSubtreeRoot(){
+		IntervalTree<Integer> tree = new IntervalTree<>();
+		IntegerInterval target = new IntegerInterval(40, 50, Bounded.OPEN);
+		IntegerInterval[] arr = new IntegerInterval[]{
+				new IntegerInterval(100, 110, Bounded.CLOSED_LEFT),
+				new IntegerInterval(150, 160, Bounded.CLOSED_LEFT),
+				new IntegerInterval(50, 60, Bounded.CLOSED_RIGHT),
+				new IntegerInterval(160, 170, Bounded.CLOSED_LEFT),
+				new IntegerInterval(60, 70, Bounded.OPEN),
+				target,
+				new IntegerInterval(70, 80, Bounded.OPEN),
+				new IntegerInterval(140, 150, Bounded.CLOSED_LEFT),
+				new IntegerInterval(46, 49, Bounded.CLOSED)
+
+		};
+		for (IntegerInterval next: arr)
+			tree.addInterval(next);
+		Iterator<Interval<Integer>> it = tree.iterator();
+		List<Interval<Integer>> list = new ArrayList<>();
+		while(it.hasNext()){
+			Interval<Integer> next = it.next();
+			if (next == target)
+				it.remove();
+			else
+				list.add(next);
+		}
+
+		assertEquals(arr.length-1, list.size());
+		for (Interval<Integer> next: arr){
+			if (target == next)
+				assertFalse(list.contains(next));
+			else
+				assertTrue(list.contains(next));
+		}
 	}
 }
