@@ -1,6 +1,5 @@
 package com.lodborg.intervaltree;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -393,7 +392,7 @@ public class IntervalTest {
 				new IntMock(5, Unbounded.OPEN_LEFT)
 		};
 
-		Arrays.sort(arr, Interval.startComparator);
+		Arrays.sort(arr, Interval.sweepLeftToRight);
 		assertArrayEquals(expected, arr);
 	}
 
@@ -429,7 +428,7 @@ public class IntervalTest {
 				new IntMock(0, Unbounded.OPEN_RIGHT)
 		};
 
-		Arrays.sort(arr, Interval.endComparator);
+		Arrays.sort(arr, Interval.sweepRightToLeft);
 		for (int i=0; i<arr.length; i++)
 			assertEquals(arr[i], expected[i]);
 		assertArrayEquals(expected, arr);

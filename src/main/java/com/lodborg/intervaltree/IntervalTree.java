@@ -3,6 +3,39 @@ package com.lodborg.intervaltree;
 import java.util.*;
 import com.lodborg.intervaltree.TreeNode.*;
 
+/**
+ * An implementation of a Centered Interval Tree for efficient search in a set of intervals. See
+ * <a href="https://en.wikipedia.org/wiki/Interval_tree">https://en.wikipedia.org/wiki/Interval_tree</a>.
+ *
+ * <p>
+ * The tree functions as a set, meaning that it will not store an interval more than
+ * once. More formally, for any two distinct intervals x and y within the tree, it is
+ * guaranteed that x.equals(y) will evaluate to false. If you try to add an interval to the tree,
+ * which is already in it, the tree will reject it. See the documentation of
+ * {@link #add(Interval) the add method} for more information. The tree will also <strong>not</strong> accept
+ * {@code null} or empty intervals, meaning intervals whose {@link Interval#isEmpty()}
+ * method evaluates to {@code true}.
+ * </p>
+ * <p>
+ * The {@link #iterator()} method of the tree returns a fail-fast iterator, which will
+ * throw a {@code ConcurrentModificationException}, if the tree is modified in any form
+ * during the iteration, other than by using the iterator's own {@code remove} method. However,
+ * this is done in a best-effort manner, since it is generally hard to guarantee this behaviour
+ * while using non-atomic and not synchronized methods.
+ *</p>
+ * <p>
+ * The tree relies on the usage of a subclass of the {@link Interval} class to represent the
+ * intervals. The majority of the interval methods are already implemented within the
+ * {@code Interval} class and don't have to be implemented by the extending class. Comparisons
+ * between the intervals are also pre-implemented in the {@code Interval} class and use the
+ * start and endpoints to create a total order of all stored intervals. However, if the tree
+ * needs to store intervals that have the same start and end points but represent different
+ * logical entities, you need a subclass that overwrites the {@code equals}, {@code hashCode}
+ * and {@code compareTo} methods. See the documentation of {@link Interval} for more information.
+ *</p>
+ *
+ * @param <T> The type for the start and end point of the interval
+ */
 public class IntervalTree<T extends Comparable<? super T>> extends AbstractSet<Interval<T>> {
 	TreeNode<T> root;
 	int size;
@@ -81,10 +114,10 @@ public class IntervalTree<T extends Comparable<? super T>> extends AbstractSet<I
 					if (it.currentNode.increasing.size() == 1){
 						root = TreeNode.removeInterval(IntervalTree.this, root, it.currentInterval);
 
-						// Rebuild the whole branch stack in the iterator, because we might
-						// have moved nodes around and introduced new nodes. The rule is,
-						// add all nodes to the branch stack, to which the current node is
-						// a left child.
+						// Rebuild the whole branch stack in the iterator, because we might have
+						// moved nodes around and introduced new nodes into the branch. The rule
+						// is, add all nodes to the branch stack, to which the current node is
+						// a left descendant.
 						TreeNode<T> node = root;
 						it.stack = new Stack<>();
 

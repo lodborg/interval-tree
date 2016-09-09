@@ -137,8 +137,8 @@ public class RandomizedTest {
 			out.treeSearchTime += System.currentTimeMillis() - time;
 			List<Interval<Integer>> fromTree = new ArrayList<>(set);
 			//return true;
-			Collections.sort(fromList, Interval.startComparator);
-			Collections.sort(fromTree, Interval.startComparator);
+			Collections.sort(fromList, Interval.sweepLeftToRight);
+			Collections.sort(fromTree, Interval.sweepLeftToRight);
 			int treeIndex = 0;
 			for (int listIndex = 0; listIndex < fromList.size(); listIndex++){
 				if (listIndex > 0 && fromList.get(listIndex).equals(fromList.get(listIndex-1)))
