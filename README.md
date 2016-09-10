@@ -1,6 +1,7 @@
 # Interval Tree
 
-[![Build Status](https://travis-ci.org/lodborg/interval-tree.svg?branch=master)](https://travis-ci.org/lodborg/interval-tree) &nbsp; [![codecov.io](https://codecov.io/github/lodborg/interval-tree/coverage.svg?branch=master)](https://codecov.io/gh/lodborg/interval-tree)
+[![Build Status](https://travis-ci.org/lodborg/interval-tree.svg?branch=master)](https://travis-ci.org/lodborg/interval-tree) &nbsp; [![codecov.io](https://codecov.io/github/lodborg/interval-tree/coverage.svg?branch=master)](https://codecov.io/gh/lodborg/interval-tree) &nbsp; [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.lodborg/interval-tree/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Ccom.lodborg.interval-tree)
+
 
 Implementation of dynamic interval trees.
 * Supports lookup for all intervals intersecting a query point in O(logn + k) worst-case time, where n is the amount of intervals stored in the tree and k is the amount of intervals returned by the lookup.
