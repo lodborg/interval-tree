@@ -18,7 +18,7 @@ import com.lodborg.intervaltree.TreeNode.*;
  * </p>
  * <p>
  * The {@link #iterator()} method of the tree returns a fail-fast iterator, which will
- * throw a {@code ConcurrentModificationException}, if the tree is modified in any form
+ * throw a {@link ConcurrentModificationException}, if the tree is modified in any form
  * during the iteration, other than by using the iterator's own {@code remove} method. However,
  * this is done in a best-effort manner, since it is generally hard to guarantee this behaviour
  * while using non-atomic and not synchronized methods.
@@ -37,9 +37,29 @@ import com.lodborg.intervaltree.TreeNode.*;
  * @param <T> The type for the start and end point of the interval
  */
 public class IntervalTree<T extends Comparable<? super T>> extends AbstractSet<Interval<T>> {
+
+	/**
+	 * The root of the current interval tree. It is {@code null} initially, when the tree is
+	 * empty and may change as the result of adding or removing intervals to the tree.
+	 */
 	TreeNode<T> root;
+
+	/**
+	 * The size of the interval tree, or the amount of intervals stored in it.
+	 */
 	int size;
 
+	/**
+	 * Adds an interval to the tree. If the interval is empty, it is rejected and not
+	 * stored in the tree. This operation may cause a rebalancing of the tree, which
+	 * in turn may cause intervals to be {@link TreeNode#assimilateOverlappingIntervals(TreeNode) assimilated}.
+	 * This is why this operation may run in {@code O(n)} worst-case time, even though
+	 * on average it should run in {@code O(logn)} due to the nature binary trees.
+	 *
+	 * @param interval The interval to be added to the tree.
+	 * @return {@code true}, if the tree has been modified as a result of the operation,
+	 *         or {@code false} otherwise.
+	 */
 	@Override
 	public boolean add(Interval<T> interval){
 		if (interval.isEmpty())
@@ -49,10 +69,32 @@ public class IntervalTree<T extends Comparable<? super T>> extends AbstractSet<I
 		return size == sizeBeforeOperation;
 	}
 
+	/**
+	 * Searches for and returns all intervals stored in the tree, that contain a given
+	 * query point. This operation is guaranteed to run in {@code O(logn + k)}, where
+	 * {@code n} is the size of the tree and {@code k} is the size of the returned set,
+	 * provided that the time complexity of iterating over the intervals stored in each
+	 * visited node is amortized {@code O(1)}. This assumption is met for the current
+	 * implementation of {@link TreeNode}, where {@link TreeSet}s are used.
+	 *
+	 * @param point The query point.
+	 * @return A set containing all intervals from the tree, intersecting the query point.
+	 */
 	public Set<Interval<T>> query(T point){
 		return TreeNode.query(root, point, new HashSet<Interval<T>>());
 	}
 
+	/**
+	 * Searches for and returns all intervals stored in the tree, that intersect a given
+	 * query interval. This operation is guaranteed to run in {@code O(logn + k)}, where
+	 * {@code n} is the size of the tree and {@code k} is the size of the returned set,
+	 * provided that the time complexity of iterating over the intervals stored in each
+	 * visited node is amortized {@code O(1)}. This assumption is met for the current
+	 * implementation of {@link TreeNode}, where {@link TreeSet}s are used.
+	 *
+	 * @param interval The query interval.
+	 * @return A set containing all intervals from the tree, intersecting the query interval.
+	 */
 	public Set<Interval<T>> query(Interval<T> interval){
 		Set<Interval<T>> result = new HashSet<>();
 
@@ -86,6 +128,17 @@ public class IntervalTree<T extends Comparable<? super T>> extends AbstractSet<I
 		return result;
 	}
 
+	/**
+	 * Removes an interval from the tree, if it was stored in it. This operation may cause the
+	 * {@link TreeNode#deleteNode(TreeNode) deletion of a node}, which in turn may cause
+	 * rebalancing of the tree and the {@link TreeNode#assimilateOverlappingIntervals(TreeNode) assimilation}
+	 * of intervals from one node to another. This is why this operation may run in {@code O(n)}
+	 * worst-case time, even though on average it should run in {@code O(logn)} due to the
+	 * nature binary trees.
+	 *
+	 * @param interval
+	 * @return
+	 */
 	public boolean remove(Interval<T> interval){
 		if (interval.isEmpty() || root == null)
 			return false;
@@ -161,16 +214,33 @@ public class IntervalTree<T extends Comparable<? super T>> extends AbstractSet<I
 	// ================== Methods from the Set interface =======================
 	// =========================================================================
 
+	/**
+	 * Returns the size of the tree.
+	 *
+	 * @return The amount of intervals, stored in the tree.
+	 */
 	public int size(){
 		return size;
 	}
 
+	/**
+	 * Removes all intervals from the tree. This is an {@code O(1)} worst-case
+	 * time operation.
+	 */
 	@Override
 	public void clear() {
 		size = 0;
 		root = null;
 	}
 
+	/**
+	 * Checks if a given object is stored in the tree. This method uses binary
+	 * search instead of iteration over all intervals, which is why it runs in
+	 * guaranteed {@code O(logn)} worst-case time.
+	 * @param o The query object.
+	 * @return {@code true}, if the object is stored in the tree, or {@code false}
+	 *         otherwise.
+	 */
 	@Override
 	public boolean contains(Object o) {
 		if (root == null || o == null)
