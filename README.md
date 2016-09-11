@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/lodborg/interval-tree.svg?branch=master)](https://travis-ci.org/lodborg/interval-tree) &nbsp; [![codecov.io](https://codecov.io/github/lodborg/interval-tree/coverage.svg?branch=master)](https://codecov.io/gh/lodborg/interval-tree) &nbsp; [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.lodborg/interval-tree/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Ccom.lodborg.interval-tree)
 
-Implementation of dynamic interval trees.
+Implementation of a dynamic centered <a href="https://en.wikipedia.org/wiki/Interval_tree">interval tree</a>.
 * Supports lookup for all intervals intersecting a query interval or point.
 * Can be used with custom Interval classes.
 * Lookups are in O(logn + k) worst-case time, where n is the amount of intervals stored in the tree and k is the amount of intervals returned by the lookup.
@@ -33,7 +33,7 @@ For the first benchmark we started with an empty list and an empty tree. Both da
 
 Another factor that influences the performance of the interval tree is the size of the output - the amount of intervals returned from a lookup. If a search query is expected to return the majority of intervals in the set, then the time complexity of a tree lookup will be close to linear, making the tree as efficient as an ArrayList. To measure how well the tree performs in these situations, we tried out different interval lengths. The bigger the interval length, the more intervals overlap, increasing the output size.
 
-![Lookup speeds over intervals of different length](https://raw.githubusercontent.com/lodborg/interval-tree/master/res/rl-chart.png)
+<center>![Lookup speeds over intervals of different length](https://raw.githubusercontent.com/lodborg/interval-tree/master/res/rl-chart.png)</center>
 
 The graph shows a comparison of the tree performance with increasing interval length while keeping the range of the intervals constant (the possible values for the start points). We tried four different Range-to-Length ratios (RL ratios). The smaller the ratio, the bigger the expected output sizes are. As expected, lookups over shorter intervals have much better throughput and at tree sizes of a few million intervals lookups are 27000 times faster than with an ArrayList. With RL rato of 1:1000 the performance benefits start to drop significantly, but lookups are still over 500 times faster than list lookups, if the tree size is in the hundreds of thousands.
 
