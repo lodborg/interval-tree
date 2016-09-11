@@ -75,26 +75,26 @@ public class TreeNode<T extends Comparable<? super T>> implements Iterable<Inter
 	 * starting points.
 	 * @see Interval#sweepLeftToRight
 	 */
-	protected NavigableSet<Interval<T>> decreasing;
+	protected NavigableSet<Interval<T>> increasing;
 
 	/**
 	 * A set containing all {@link Interval}s stored in this node, ordered by their
 	 * end points.
 	 * @see Interval#sweepRightToLeft
 	 */
-	protected NavigableSet<Interval<T>> increasing;
+	protected NavigableSet<Interval<T>> decreasing;
 
 	/**
-	 * A pointer to the left child of the current node. The left child must have
-	 * a midpoint, smaller than the midpoint of the current node. More formally,
-	 * {@code left.midpoint.compareTo(this.midpoint) < 0} must evaluate to {@code true}.
+	 * A pointer to the left child of the current node. The left child must either be
+	 * {@code null} or have a midpoint, smaller than the midpoint of the current node. More
+	 * formally, {@code left.midpoint.compareTo(this.midpoint) < 0} must evaluate to {@code true}.
 	 */
 	protected TreeNode<T> left;
 
 	/**
-	 * A pointer to the right child of the current node. The right child must have
-	 * a midpoint, larger than the midpoint of the current node. More formally,
-	 * {@code right.midpoint.compareTo(this.midpoint) > 0} must evaluate to {@code true}.
+	 * A pointer to the right child of the current node. The right child must either be
+	 * {@code null} or have a midpoint, larger than the midpoint of the current node. More
+	 * formally, {@code right.midpoint.compareTo(this.midpoint) > 0} must evaluate to {@code true}.
 	 */
 	protected TreeNode<T> right;
 
@@ -127,7 +127,8 @@ public class TreeNode<T extends Comparable<? super T>> implements Iterable<Inter
 	}
 
 	/**
-	 * Adds a new interval to the subtree rooted at a {@code TreeNode}.
+	 * A helper function for the {@link IntervalTree#add(Interval)} method. Adds a new
+	 * interval to the subtree rooted at a {@code TreeNode}.
 	 *
 	 * @param tree The {@link IntervalTree} containing the subtree. Used primarily for
 	 *             housekeeping, such as adjusting the size of the tree, if needed.
