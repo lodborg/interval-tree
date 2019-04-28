@@ -196,6 +196,7 @@ public class TreeNode<T extends Comparable<? super T>> implements Iterable<Inter
 			// The tree is right-heavy.
 			if (height(right.left) > height(right.right)){
 				this.right = this.right.rightRotate();
+				this.right.height = Math.max(height(this.right.left), height(this.right.right)) + 1;
 				return leftRotate();
 			} else{
 				return leftRotate();
@@ -204,6 +205,7 @@ public class TreeNode<T extends Comparable<? super T>> implements Iterable<Inter
 			// The tree is left-heavy.
 			if (height(left.right) > height(left.left)){
 				this.left = this.left.leftRotate();
+				this.left.height = Math.max(height(this.left.left), height(this.left.right)) + 1;
 				return rightRotate();
 			} else
 				return rightRotate();

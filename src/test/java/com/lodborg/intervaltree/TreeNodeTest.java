@@ -1,12 +1,16 @@
 package com.lodborg.intervaltree;
 
+import com.lodborg.intervaltree.Interval.Bounded;
+import org.hamcrest.CoreMatchers;
 import org.junit.Test;
-
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
-import com.lodborg.intervaltree.Interval.*;
+import org.mockito.Mockito;
 
 import java.util.*;
+
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.*;
 
 public class TreeNodeTest {
 	@Test
@@ -233,5 +237,88 @@ public class TreeNodeTest {
 			else
 				assertTrue(list.contains(next));
 		}
+	}
+
+	@Test
+	public void leftRightRotation() {
+
+		IntervalTree<Integer> tree = Mockito.mock(IntervalTree.class);
+		TreeNode<Integer> node = TreeNode.addInterval(tree, null, new IntegerInterval(100, 100, Bounded.CLOSED));
+		node = TreeNode.addInterval(tree, node, new IntegerInterval(50, 50, Bounded.CLOSED));
+		node = TreeNode.addInterval(tree, node, new IntegerInterval(75, 75, Bounded.CLOSED));
+
+		assertAVLHeightProperty(node);
+		assertHeight(node);
+	}
+
+	@Test
+	public void rightLeftRotation() {
+
+		IntervalTree<Integer> tree = Mockito.mock(IntervalTree.class);
+		TreeNode<Integer> node = TreeNode.addInterval(tree, null, new IntegerInterval(50, 50, Bounded.CLOSED));
+		node = TreeNode.addInterval(tree, node, new IntegerInterval(100, 100, Bounded.CLOSED));
+		node = TreeNode.addInterval(tree, node, new IntegerInterval(75, 75, Bounded.CLOSED));
+
+		assertAVLHeightProperty(node);
+		assertHeight(node);
+	}
+
+
+	@Test
+	public void randomIntervals() {
+
+		IntervalTree<Integer> tree = Mockito.mock(IntervalTree.class);
+		Random random = new Random();
+
+		TreeNode<Integer> node = TreeNode.addInterval(tree, null, new IntegerInterval(100, 100, Bounded.CLOSED));
+
+		for (int i = 0; i < 100_000; i++) {
+
+			int num = random.nextInt();
+			node = TreeNode.addInterval(tree, node, new IntegerInterval(num - 1, num + 1, Bounded.CLOSED));
+		}
+
+		assertAVLHeightProperty(node);
+		assertHeight(node);
+	}
+
+	private <T extends Comparable<T>> int assertHeight(TreeNode<T> node) {
+
+		if (node == null) {
+			return 0;
+		}
+
+		int leftHeight = assertHeight(node.left);
+		int rightHeight = assertHeight(node.right);
+
+		int height = Math.max(leftHeight, rightHeight) + 1;
+
+		assertThat(node.height, is(height));
+
+		return height;
+	}
+
+	private <T extends Comparable<T>> void assertAVLHeightProperty(TreeNode<T> root) {
+
+		if (root == null) {
+			return;
+		}
+
+		assertThat(root.height, greaterThan(0));
+
+		if (root.left == null && root.right == null) {
+			assertThat(root.height, CoreMatchers.is(1));
+		} else {
+			assertThat("Height of two subtrees should not differ by more than 1",
+					Math.abs(height(root.left) - height(root.right)), lessThanOrEqualTo(1));
+		}
+
+		assertAVLHeightProperty(root.left);
+		assertAVLHeightProperty(root.right);
+	}
+
+	private <T extends Comparable<T>> int height(TreeNode<T> root) {
+
+		return root == null ? 0 : root.height;
 	}
 }
